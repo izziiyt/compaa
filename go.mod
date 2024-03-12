@@ -1,4 +1,4 @@
-module compaa
+module github.com/izziiyt/compaa
 
 go 1.22
 

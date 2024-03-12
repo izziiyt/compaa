@@ -1,12 +1,12 @@
 package component
 
 import (
-	"compaa/eol"
-	"compaa/npm"
 	"context"
 	"errors"
 	"fmt"
 	"github.com/google/go-github/v60/github"
+	"github.com/izziiyt/compaa/eol"
+	"github.com/izziiyt/compaa/npm"
 	"io"
 	"strings"
 	"sync"

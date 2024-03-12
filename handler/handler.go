@@ -1,8 +1,8 @@
 package handler
 
 import (
-	"compaa/component"
 	"context"
+	"github.com/izziiyt/compaa/component"
 )
 
 type Handler interface {

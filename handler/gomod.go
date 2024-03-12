@@ -1,11 +1,11 @@
 package handler
 
 import (
-	"compaa/component"
-	"compaa/eol"
 	"context"
 	"fmt"
 	"github.com/google/go-github/v60/github"
+	"github.com/izziiyt/compaa/component"
+	"github.com/izziiyt/compaa/eol"
 	"golang.org/x/mod/modfile"
 	"io"
 	"os"

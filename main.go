@@ -1,14 +1,14 @@
 package main
 
 import (
-	"compaa/component"
-	"compaa/eol"
-	"compaa/handler"
-	"compaa/npm"
 	"context"
 	"flag"
 	"fmt"
 	"github.com/google/go-github/v60/github"
+	"github.com/izziiyt/compaa/component"
+	"github.com/izziiyt/compaa/eol"
+	"github.com/izziiyt/compaa/handler"
+	"github.com/izziiyt/compaa/npm"
 	"os"
 	"strings"
 	"sync"
