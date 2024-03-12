@@ -1,8 +1,8 @@
 package handler
 
 import (
+	"compaa/component"
 	"context"
-	"depeol/component"
 )
 
 type Handler interface {

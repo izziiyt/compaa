@@ -1,10 +1,10 @@
 package handler
 
 import (
+	"compaa/component"
+	"compaa/eol"
+	"compaa/npm"
 	"context"
-	"depeol/component"
-	"depeol/eol"
-	"depeol/npm"
 	"encoding/json"
 	"fmt"
 	"github.com/google/go-github/v60/github"

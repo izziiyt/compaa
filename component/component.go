@@ -1,9 +1,9 @@
 package component
 
 import (
+	"compaa/eol"
+	"compaa/npm"
 	"context"
-	"depeol/eol"
-	"depeol/npm"
 	"errors"
 	"fmt"
 	"github.com/google/go-github/v60/github"

@@ -1,9 +1,9 @@
 package handler
 
 import (
+	"compaa/component"
+	"compaa/eol"
 	"context"
-	"depeol/component"
-	"depeol/eol"
 	"fmt"
 	"github.com/google/go-github/v60/github"
 	"golang.org/x/mod/modfile"
