@@ -6,6 +6,7 @@ import (
 	"github.com/google/go-github/v60/github"
 	"github.com/izziiyt/compaa/component"
 	"github.com/izziiyt/compaa/eol"
+	"github.com/izziiyt/compaa/gopkg"
 	"golang.org/x/mod/modfile"
 	"io"
 	"os"
@@ -13,9 +14,10 @@ import (
 )
 
 type GoMod struct {
-	gcli *github.Client
-	ecli *eol.Client
-	wc   *component.WarnCondition
+	gcli  *github.Client
+	ecli  *eol.Client
+	gpcli *gopkg.Client
+	wc    *component.WarnCondition
 }
 
 func NewGoMod(gcli *github.Client, ecli *eol.Client, wc *component.WarnCondition) *GoMod {
@@ -29,6 +31,9 @@ func NewGoMod(gcli *github.Client, ecli *eol.Client, wc *component.WarnCondition
 	}
 	if gm.ecli == nil {
 		gm.ecli = eol.NewClient(nil)
+	}
+	if gm.gpcli == nil {
+		gm.gpcli = gopkg.NewClient(nil)
 	}
 	if gm.wc == nil {
 		gm.wc = &component.DefaultWarnCondition
@@ -44,7 +49,7 @@ func (h *GoMod) Handle(ctx context.Context, path string) {
 
 	ts, err := h.LookUp(ctx, path)
 	if err != nil {
-		fmt.Fprintf(&buf, "LookUp error: %v", err)
+		fmt.Fprintf(&buf, "├ LookUp error: %v\n", err)
 	}
 
 	for _, t := range ts {
@@ -80,21 +85,30 @@ func (h *GoMod) LookUp(ctx context.Context, path string) ([]component.Component,
 	buf = append(buf, t)
 
 	for _, r := range pf.Require {
-		if strings.HasPrefix(r.Mod.Path, "golang.org") {
+		if r.Indirect {
 			continue
 		}
 
 		t := &component.Module{
 			Name: r.Mod.Path,
 		}
-		t.GHOrg, t.GHRepo, err = t.OrgAndRepo()
-		if err != nil {
-			return nil, err
+
+		if strings.HasPrefix(r.Mod.Path, "github.com") {
+			t.GHOrg, t.GHRepo, err = t.OrgAndRepo()
+			if err != nil {
+				return nil, err
+			}
+		} else if strings.HasPrefix(r.Mod.Path, "go.uber") {
+			t.GHOrg = "uber-go"
+			t.GHRepo = strings.Split(t.Name, "/")[1]
+		} else if strings.HasPrefix(r.Mod.Path, "gopkg.in") {
+			t = t.SyncWithGopkg(ctx, h.gpcli)
+		} else {
+			continue
 		}
 
-		if t, err = t.SyncWithGitHub(ctx, h.gcli); err != nil {
-			return nil, err
-		}
+		t = t.SyncWithGitHub(ctx, h.gcli)
+
 		buf = append(buf, t)
 	}
 

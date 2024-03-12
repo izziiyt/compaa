@@ -15,7 +15,7 @@ import (
 )
 
 var (
-	rd    = flag.Int("rd", 180, "recent days. used to determine log level")
+	rd    = flag.Int("d", 180, "recent days. used to determine log level")
 	token = flag.String("t", "", "github token. recommend to set for sufficient github api rate limit")
 )
 
@@ -51,7 +51,7 @@ func main() {
 			h.Handle(ctx, path)
 			<-done
 			wg.Done()
-		}(ctx, e.Name())
+		}(ctx, path+"/"+e.Name())
 	}
 	wg.Wait()
 }

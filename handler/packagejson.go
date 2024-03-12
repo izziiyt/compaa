@@ -79,12 +79,8 @@ func (h *PackageJSON) LookUp(ctx context.Context, path string) ([]component.Comp
 		t := &component.Module{
 			Name: p.Name,
 		}
-		if t, err = t.SyncWithNPM(ctx, h.ncli); err != nil {
-			return nil, err
-		}
-		if t, err = t.SyncWithGitHub(ctx, h.gcli); err != nil {
-			return nil, err
-		}
+		t = t.SyncWithNPM(ctx, h.ncli)
+		t = t.SyncWithGitHub(ctx, h.gcli)
 		buf = append(buf, t)
 	}
 

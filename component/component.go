@@ -2,10 +2,10 @@ package component
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"github.com/google/go-github/v60/github"
 	"github.com/izziiyt/compaa/eol"
+	"github.com/izziiyt/compaa/gopkg"
 	"github.com/izziiyt/compaa/npm"
 	"io"
 	"strings"
@@ -33,12 +33,13 @@ type Module struct {
 	LastPush time.Time
 	GHOrg    string
 	GHRepo   string
+	Err      error
 }
 
 func (t *Module) OrgAndRepo() (string, string, error) {
 	tokens := strings.Split(t.Name, "/")
-	if len(tokens) < 2 {
-		return "", "", errors.New("unexpected module format")
+	if len(tokens) < 3 {
+		return "", "", fmt.Errorf("unexpected module name %v", t.Name)
 	}
 	return tokens[1], tokens[2], nil
 }
@@ -51,21 +52,28 @@ func (t *Module) UseCache() (*Module, bool) {
 	return t, false
 }
 
-func (t *Module) SyncWithGitHub(ctx context.Context, cli *github.Client) (*Module, error) {
+func (t *Module) SyncWithGitHub(ctx context.Context, cli *github.Client) *Module {
+	if t.Err != nil {
+		return t
+	}
 	_r, _, err := cli.Repositories.Get(ctx, t.GHOrg, t.GHRepo)
 	if err != nil {
-		return t, err
+		t.Err = err
+		return t
 	}
-
 	t.LastPush = _r.PushedAt.Time
 	t.Archived = *_r.Archived
 
 	moduleCache.Store(t.Name, t)
 
-	return t, nil
+	return t
 }
 
 func (t *Module) Logging(w io.Writer, wc *WarnCondition) error {
+	if t.Err != nil {
+		_, err := fmt.Fprintf(w, "├ ERROR: %v %v\n", t.Name, t.Err)
+		return err
+	}
 	if wc.IfArchived && t.Archived {
 		_, err := fmt.Fprintf(w, "├ WARN: %v is archived\n", t.Name)
 		return err
@@ -74,8 +82,9 @@ func (t *Module) Logging(w io.Writer, wc *WarnCondition) error {
 		_, err := fmt.Fprintf(w, "├ WARN: %v last push isn't recent (%v)\n", t.Name, t.LastPush)
 		return err
 	}
-	_, err := fmt.Fprintf(w, "├ INFO: pass %v last push is recent (%v)\n", t.Name, t.LastPush)
-	return err
+	// _, err := fmt.Fprintf(w, "├ INFO: pass %v last push is recent (%v)\n", t.Name, t.LastPush)
+	// return err
+	return nil
 }
 
 type Language struct {
@@ -103,18 +112,35 @@ func (t *Language) SyncWithEndOfLife(ctx context.Context, cli *eol.Client) (*Lan
 	return t, err
 }
 
-func (m *Module) SyncWithNPM(ctx context.Context, cli *npm.Client) (*Module, error) {
+func (m *Module) SyncWithNPM(ctx context.Context, cli *npm.Client) *Module {
+	if m.Err != nil {
+		return m
+	}
 	v, err := cli.FetchLatestVersion(ctx, m.Name)
 	if err != nil {
-		return m, err
+		m.Err = err
+		return m
 	}
 	if v.Repository.Type != "git" {
-		return m, fmt.Errorf("not git %v", v)
+		m.Err = fmt.Errorf("github url not found in npm %v", v)
+		return m
 	}
 	tokens := strings.Split(v.Repository.Url, "/")
 	m.GHOrg = tokens[3]
 	m.GHRepo = strings.Split(tokens[4], ".")[0]
-	return m, nil
+	return m
+}
+
+func (m *Module) SyncWithGopkg(ctx context.Context, cli *gopkg.Client) *Module {
+	if m.Err != nil {
+		return m
+	}
+	var err error
+	m.GHOrg, m.GHRepo, err = cli.GetGitHub(ctx, m.Name)
+	if err != nil {
+		m.Err = err
+	}
+	return m
 }
 
 func (t *Language) Logging(w io.Writer, wc *WarnCondition) error {
@@ -126,6 +152,7 @@ func (t *Language) Logging(w io.Writer, wc *WarnCondition) error {
 		_, err := fmt.Fprintf(w, "├ WARN: %v%v EOL is recent\n", t.Name, t.Version)
 		return err
 	}
-	_, err := fmt.Fprintf(w, "├ INFO: pass %v%v\n", t.Name, t.Version)
-	return err
+	// _, err := fmt.Fprintf(w, "├ INFO: pass %v%v\n", t.Name, t.Version)
+	// return err
+	return nil
 }

@@ -7,7 +7,7 @@ Some tools supports auto update functions, but you may find it sometimes wont' m
 # Install
 
 ```shell
-go intsall compaa
+go intsall github.com/izziiyt/compaa@latest
 ```
 
 # Run
