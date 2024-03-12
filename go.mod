@@ -1,4 +1,4 @@
-module depeol
+module compaa
 
 go 1.22.1
 
