@@ -159,11 +159,7 @@ func (m *Module) SyncWithGopkg(ctx context.Context, cli *gopkg.Client) *Module {
 	if m.Err != nil {
 		return m
 	}
-	var err error
-	m.GHOrg, m.GHRepo, err = cli.GetGitHub(ctx, m.Name)
-	if err != nil {
-		m.Err = err
-	}
+	m.GHOrg, m.GHRepo, m.Err = cli.GetGitHub(ctx, m.Name)
 	return m
 }
 
