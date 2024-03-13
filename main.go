@@ -4,8 +4,8 @@ import (
 	"context"
 	"flag"
 	"fmt"
-	"os"
-	fpath "path"
+	"io/fs"
+	"path/filepath"
 	"strings"
 	"sync"
 
@@ -26,24 +26,19 @@ func main() {
 	if len(args) > 0 {
 		path = args[0]
 	}
-	entries, err := os.ReadDir(path)
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
 	ctx := context.Background()
 	wc := &component.DefaultWarnCondition
 	wc.RecentDays = *rd
 	r := NewRouter(*token, wc)
 	wg := &sync.WaitGroup{}
 	done := make(chan struct{}, 10)
-	for _, e := range entries {
-		if e.IsDir() {
-			continue
+	err := filepath.WalkDir(path, func(path string, d fs.DirEntry, err error) error {
+		if d.IsDir() && strings.Contains(d.Name(), "node_modules") {
+			return filepath.SkipDir
 		}
-		h := r.Route(e.Name())
+		h := r.Route(path)
 		if h == nil {
-			continue
+			return nil
 		}
 		wg.Add(1)
 		go func(ctx context.Context, path string) {
@@ -51,7 +46,11 @@ func main() {
 			h.Handle(ctx, path)
 			<-done
 			wg.Done()
-		}(ctx, fpath.Join(path, e.Name()))
+		}(ctx, path)
+		return nil
+	})
+	if err != nil {
+		fmt.Println(err)
 	}
 	wg.Wait()
 }
