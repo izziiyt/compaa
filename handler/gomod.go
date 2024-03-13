@@ -6,6 +6,7 @@ import (
 	"io"
 	"os"
 	"strings"
+	"sync"
 
 	"github.com/google/go-github/v60/github"
 	"github.com/izziiyt/compaa/component"
@@ -35,22 +36,51 @@ func NewGoMod(gcli *github.Client, wc *component.WarnCondition) *GoMod {
 }
 
 func (h *GoMod) Handle(ctx context.Context, path string) {
-	var buf strings.Builder
-	defer func() { fmt.Print(buf.String()) }()
+	fmt.Printf("%v\n", path)
 
-	fmt.Fprintf(&buf, "%v\n", path)
-
-	ts, err := h.LookUp(ctx, path)
+	ts, err := h.LookUp(path)
 	if err != nil {
-		fmt.Fprintf(&buf, "├ LookUp error: %v\n", err)
+		fmt.Printf("├ LookUp error: %v\n", err)
 	}
 
+	wg := &sync.WaitGroup{}
+	done := make(chan struct{}, 10)
 	for _, t := range ts {
-		t.Logging(&buf, h.wc)
+		if ok := t.LoadCache(); ok {
+			t.Logging(h.wc)
+			continue
+		}
+		wg.Add(1)
+		go func(ctx context.Context, t component.Component) {
+			done <- struct{}{}
+			if ok := t.LoadCache(); !ok {
+				switch v := t.(type) {
+				case *component.Module:
+					if strings.HasPrefix(v.Name, "github.com") {
+						v.GHOrg, v.GHRepo, err = v.OrgAndRepo()
+						v.Err = err
+					} else if strings.HasPrefix(v.Name, "go.uber") {
+						v.GHOrg = "uber-go"
+						v.GHRepo = strings.Split(v.Name, "/")[1]
+					} else if strings.HasPrefix(v.Name, "gopkg.in") {
+						v = v.SyncWithGopkg(ctx, h.gpcli)
+					}
+					v = v.SyncWithGitHub(ctx, h.gcli)
+					v.StoreCache()
+				case *component.Language:
+					v = v.SyncWithEndOfLife(ctx, h.ecli)
+					v.StoreCache()
+				}
+			}
+			t.Logging(h.wc)
+			<-done
+			wg.Done()
+		}(ctx, t)
 	}
+	wg.Wait()
 }
 
-func (h *GoMod) LookUp(ctx context.Context, path string) ([]component.Component, error) {
+func (h *GoMod) LookUp(path string) ([]component.Component, error) {
 	var buf []component.Component
 	f, err := os.Open(path)
 	defer f.Close()
@@ -72,9 +102,6 @@ func (h *GoMod) LookUp(ctx context.Context, path string) ([]component.Component,
 		Name:    "go",
 		Version: pf.Go.Version,
 	}
-	if t, err = t.SyncWithEndOfLife(ctx, h.ecli); err != nil {
-		return nil, err
-	}
 	buf = append(buf, t)
 
 	for _, r := range pf.Require {
@@ -85,22 +112,6 @@ func (h *GoMod) LookUp(ctx context.Context, path string) ([]component.Component,
 		t := &component.Module{
 			Name: r.Mod.Path,
 		}
-
-		if strings.HasPrefix(r.Mod.Path, "github.com") {
-			t.GHOrg, t.GHRepo, err = t.OrgAndRepo()
-			if err != nil {
-				return nil, err
-			}
-		} else if strings.HasPrefix(r.Mod.Path, "go.uber") {
-			t.GHOrg = "uber-go"
-			t.GHRepo = strings.Split(t.Name, "/")[1]
-		} else if strings.HasPrefix(r.Mod.Path, "gopkg.in") {
-			t = t.SyncWithGopkg(ctx, h.gpcli)
-		} else {
-			continue
-		}
-
-		t = t.SyncWithGitHub(ctx, h.gcli)
 
 		buf = append(buf, t)
 	}

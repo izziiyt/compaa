@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"strings"
+	"sync"
 
 	"github.com/google/go-github/v60/github"
 	"github.com/izziiyt/compaa/component"
@@ -35,25 +35,38 @@ func NewPackageJSON(gcli *github.Client, wc *component.WarnCondition) *PackageJS
 }
 
 func (h *PackageJSON) Handle(ctx context.Context, path string) {
-	var buf strings.Builder
-	defer func() { fmt.Print(buf.String()) }()
+	fmt.Printf("%v\n", path)
 
-	fmt.Fprintf(&buf, "%v\n", path)
-
-	ts, err := h.LookUp(ctx, path)
+	ts, err := h.LookUp(path)
 	if err != nil {
-		fmt.Fprintf(&buf, "LookUp error: %v", err)
+		fmt.Printf("LookUp error: %v", err)
 		return
 	}
 
+	wg := &sync.WaitGroup{}
+	done := make(chan struct{}, 10)
 	for _, t := range ts {
-		t.Logging(&buf, h.wc)
+		wg.Add(1)
+		go func(ctx context.Context, t component.Component) {
+			done <- struct{}{}
+			if ok := t.LoadCache(); !ok {
+				switch v := t.(type) {
+				case *component.Module:
+					v = v.SyncWithNPM(ctx, h.ncli)
+					v = v.SyncWithGitHub(ctx, h.gcli)
+					v.StoreCache()
+				}
+			}
+			t.StoreCache()
+			t.Logging(h.wc)
+			<-done
+			wg.Done()
+		}(ctx, t)
 	}
+	wg.Wait()
 }
 
-func (h *PackageJSON) LookUp(ctx context.Context, path string) ([]component.Component, error) {
-	var buf []component.Component
-
+func (h *PackageJSON) LookUp(path string) ([]component.Component, error) {
 	f, err := os.Open(path)
 	defer f.Close()
 	if err != nil {
@@ -67,15 +80,13 @@ func (h *PackageJSON) LookUp(ctx context.Context, path string) ([]component.Comp
 
 	ps, err := parsePackageJSON(b)
 
+	var buf []component.Component
 	for _, p := range ps {
 		t := &component.Module{
 			Name: p.Name,
 		}
-		t = t.SyncWithNPM(ctx, h.ncli)
-		t = t.SyncWithGitHub(ctx, h.gcli)
 		buf = append(buf, t)
 	}
-
 	return buf, nil
 }
 

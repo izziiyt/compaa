@@ -3,7 +3,6 @@ package component
 import (
 	"context"
 	"fmt"
-	"io"
 	"strings"
 	"sync"
 	"time"
@@ -20,7 +19,9 @@ var (
 )
 
 type Component interface {
-	Logging(w io.Writer, wc *WarnCondition) error
+	Logging(wc *WarnCondition) error
+	LoadCache() bool
+	StoreCache()
 }
 
 func init() {
@@ -45,12 +46,28 @@ func (t *Module) OrgAndRepo() (string, string, error) {
 	return tokens[1], tokens[2], nil
 }
 
-func (t *Module) UseCache() (*Module, bool) {
+func (t *Module) LoadCache() bool {
 	v, ok := moduleCache.Load(t.Name)
 	if ok {
-		return v.(*Module), true
+		t = v.(*Module)
 	}
-	return t, false
+	return ok
+}
+
+func (t *Language) LoadCache() bool {
+	v, ok := languageCache.Load(t.Name)
+	if ok {
+		t = v.(*Language)
+	}
+	return ok
+}
+
+func (t *Module) StoreCache() {
+	moduleCache.Store(t.Name, t)
+}
+
+func (t *Language) StoreCache() {
+	languageCache.Store(t.Name+t.Version, t)
 }
 
 func (t *Module) SyncWithGitHub(ctx context.Context, cli *github.Client) *Module {
@@ -65,22 +82,20 @@ func (t *Module) SyncWithGitHub(ctx context.Context, cli *github.Client) *Module
 	t.LastPush = _r.PushedAt.Time
 	t.Archived = *_r.Archived
 
-	moduleCache.Store(t.Name, t)
-
 	return t
 }
 
-func (t *Module) Logging(w io.Writer, wc *WarnCondition) error {
+func (t *Module) Logging(wc *WarnCondition) error {
 	if t.Err != nil {
-		_, err := fmt.Fprintf(w, "├ ERROR: %v %v\n", t.Name, t.Err)
+		_, err := fmt.Printf("├ ERROR: %v %v\n", t.Name, t.Err)
 		return err
 	}
 	if wc.IfArchived && t.Archived {
-		_, err := fmt.Fprintf(w, "├ WARN: %v is archived\n", t.Name)
+		_, err := fmt.Printf("├ WARN: %v is archived\n", t.Name)
 		return err
 	}
 	if t.LastPush.AddDate(0, 0, wc.RecentDays).Before(time.Now()) {
-		_, err := fmt.Fprintf(w, "├ WARN: %v last push isn't recent (%v)\n", t.Name, t.LastPush)
+		_, err := fmt.Printf("├ WARN: %v last push isn't recent (%v)\n", t.Name, t.LastPush)
 		return err
 	}
 	// _, err := fmt.Fprintf(w, "├ INFO: pass %v last push is recent (%v)\n", t.Name, t.LastPush)
@@ -93,24 +108,21 @@ type Language struct {
 	Version string
 	EOL     bool
 	EOLDate time.Time
+	Err     error
 }
 
-func (t *Language) SyncWithEndOfLife(ctx context.Context, cli *eol.Client) (*Language, error) {
-	if _t, ok := languageCache.Load(t.Name + t.Version); ok {
-		return _t.(*Language), nil
-	}
+func (t *Language) SyncWithEndOfLife(ctx context.Context, cli *eol.Client) *Language {
 	splited := strings.Split(t.Version, ".")
 	cd, err := cli.SingleCycleDetail(ctx, t.Name, strings.Join(splited[0:2], "."))
 	if err != nil {
-		return t, err
+		t.Err = err
+		return t
 	}
 
 	t.EOL = cd.EOL
 	t.EOLDate = cd.EOLDate
 
-	languageCache.Store(t.Name+t.Version, t)
-
-	return t, err
+	return t
 }
 
 func (m *Module) SyncWithNPM(ctx context.Context, cli *npm.Client) *Module {
@@ -144,13 +156,17 @@ func (m *Module) SyncWithGopkg(ctx context.Context, cli *gopkg.Client) *Module {
 	return m
 }
 
-func (t *Language) Logging(w io.Writer, wc *WarnCondition) error {
+func (t *Language) Logging(wc *WarnCondition) error {
+	if t.Err != nil {
+		_, err := fmt.Printf("├ ERROR: %v %v\n", t.Name, t.Err)
+		return err
+	}
 	if wc.IfArchived && t.EOL {
-		_, err := fmt.Fprintf(w, "├ WARN: %v%v is EOL\n", t.Name, t.Version)
+		_, err := fmt.Printf("├ WARN: %v%v is EOL\n", t.Name, t.Version)
 		return err
 	}
 	if !t.EOLDate.IsZero() && time.Now().AddDate(0, 0, wc.RecentDays).After(t.EOLDate) {
-		_, err := fmt.Fprintf(w, "├ WARN: %v%v EOL is recent\n", t.Name, t.Version)
+		_, err := fmt.Printf("├ WARN: %v%v EOL is recent\n", t.Name, t.Version)
 		return err
 	}
 	// _, err := fmt.Fprintf(w, "├ INFO: pass %v%v\n", t.Name, t.Version)

@@ -7,7 +7,6 @@ import (
 	"io/fs"
 	"path/filepath"
 	"strings"
-	"sync"
 
 	"github.com/google/go-github/v60/github"
 	"github.com/izziiyt/compaa/component"
@@ -30,8 +29,6 @@ func main() {
 	wc := &component.DefaultWarnCondition
 	wc.RecentDays = *rd
 	r := NewRouter(*token, wc)
-	wg := &sync.WaitGroup{}
-	done := make(chan struct{}, 10)
 	err := filepath.WalkDir(path, func(path string, d fs.DirEntry, err error) error {
 		if d.IsDir() && strings.Contains(d.Name(), "node_modules") {
 			return filepath.SkipDir
@@ -40,19 +37,12 @@ func main() {
 		if h == nil {
 			return nil
 		}
-		wg.Add(1)
-		go func(ctx context.Context, path string) {
-			done <- struct{}{}
-			h.Handle(ctx, path)
-			<-done
-			wg.Done()
-		}(ctx, path)
+		h.Handle(ctx, path)
 		return nil
 	})
 	if err != nil {
 		fmt.Println(err)
 	}
-	wg.Wait()
 }
 
 type Router struct {
