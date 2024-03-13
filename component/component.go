@@ -49,7 +49,13 @@ func (t *Module) OrgAndRepo() (string, string, error) {
 func (t *Module) LoadCache() bool {
 	v, ok := moduleCache.Load(t.Name)
 	if ok {
-		t = v.(*Module)
+		_v := v.(*Module)
+		t.Name = _v.Name
+		t.Archived = _v.Archived
+		t.LastPush = _v.LastPush
+		t.GHOrg = _v.GHOrg
+		t.GHRepo = _v.GHRepo
+		t.Err = _v.Err
 	}
 	return ok
 }
@@ -57,7 +63,12 @@ func (t *Module) LoadCache() bool {
 func (t *Language) LoadCache() bool {
 	v, ok := languageCache.Load(t.Name)
 	if ok {
-		t = v.(*Language)
+		_v := v.(*Language)
+		t.Name = _v.Name
+		t.Version = _v.Version
+		t.EOL = _v.EOL
+		t.EOLDate = _v.EOLDate
+		t.Err = _v.Err
 	}
 	return ok
 }
