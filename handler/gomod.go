@@ -21,20 +21,12 @@ type GoMod struct {
 	wc    *component.WarnCondition
 }
 
-func NewGoMod(gcli *github.Client, ecli *eol.Client, wc *component.WarnCondition) *GoMod {
+func NewGoMod(gcli *github.Client, wc *component.WarnCondition) *GoMod {
 	gm := &GoMod{
-		gcli: gcli,
-		ecli: ecli,
-		wc:   wc,
-	}
-	if gm.gcli == nil {
-		gm.gcli = github.NewClient(nil)
-	}
-	if gm.ecli == nil {
-		gm.ecli = eol.NewClient(nil)
-	}
-	if gm.gpcli == nil {
-		gm.gpcli = gopkg.NewClient(nil)
+		gcli:  gcli,
+		ecli:  eol.NewClient(nil),
+		gpcli: gopkg.NewClient(nil),
+		wc:    wc,
 	}
 	if gm.wc == nil {
 		gm.wc = &component.DefaultWarnCondition

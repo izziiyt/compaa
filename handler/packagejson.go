@@ -21,21 +21,12 @@ type PackageJSON struct {
 	wc   *component.WarnCondition
 }
 
-func NewPackageJSON(gcli *github.Client, ecli *eol.Client, ncli *npm.Client, wc *component.WarnCondition) *PackageJSON {
+func NewPackageJSON(gcli *github.Client, wc *component.WarnCondition) *PackageJSON {
 	gm := &PackageJSON{
 		gcli: gcli,
-		ecli: ecli,
-		ncli: ncli,
+		ecli: eol.NewClient(nil),
+		ncli: npm.NewClient(nil),
 		wc:   wc,
-	}
-	if gm.gcli == nil {
-		gm.gcli = github.NewClient(nil)
-	}
-	if gm.ecli == nil {
-		gm.ecli = eol.NewClient(nil)
-	}
-	if gm.ncli == nil {
-		gm.ncli = npm.NewClient(nil)
 	}
 	if gm.wc == nil {
 		gm.wc = &component.DefaultWarnCondition

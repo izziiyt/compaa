@@ -5,6 +5,7 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	fpath "path"
 	"strings"
 	"sync"
 
@@ -50,7 +51,7 @@ func main() {
 			h.Handle(ctx, path)
 			<-done
 			wg.Done()
-		}(ctx, path+"/"+e.Name())
+		}(ctx, fpath.Join(path, e.Name()))
 	}
 	wg.Wait()
 }
@@ -66,8 +67,8 @@ func NewRouter(ghtoken string, wc *component.WarnCondition) *Router {
 		gcli = gcli.WithAuthToken(ghtoken)
 	}
 	return &Router{
-		gomod:       handler.NewGoMod(gcli, nil, wc),
-		packagejson: handler.NewPackageJSON(gcli, nil, nil, wc),
+		gomod:       handler.NewGoMod(gcli, wc),
+		packagejson: handler.NewPackageJSON(gcli, wc),
 	}
 }
 
