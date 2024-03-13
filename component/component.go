@@ -128,7 +128,7 @@ func (m *Module) SyncWithNPM(ctx context.Context, cli *npm.Client) *Module {
 	}
 	tokens := strings.Split(v.Repository.Url, "/")
 	m.GHOrg = tokens[3]
-	m.GHRepo = strings.Split(tokens[4], ".")[0]
+	m.GHRepo = strings.TrimSuffix(tokens[4], ".git")
 	return m
 }
 

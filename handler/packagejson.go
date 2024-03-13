@@ -104,8 +104,8 @@ func parsePackageJSON(b []byte) (ps []*pjJSON, err error) {
 	for k := range j.Dependencies {
 		ps = append(ps, &pjJSON{DEV: false, Name: k})
 	}
-	for k := range j.DevDependencies {
-		ps = append(ps, &pjJSON{DEV: true, Name: k})
-	}
+	// for k := range j.DevDependencies {
+	// 	ps = append(ps, &pjJSON{DEV: true, Name: k})
+	// }
 	return
 }
