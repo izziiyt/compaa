@@ -4,14 +4,13 @@ import (
 	"context"
 	"flag"
 	"fmt"
-	"github.com/google/go-github/v60/github"
-	"github.com/izziiyt/compaa/component"
-	"github.com/izziiyt/compaa/eol"
-	"github.com/izziiyt/compaa/handler"
-	"github.com/izziiyt/compaa/npm"
 	"os"
 	"strings"
 	"sync"
+
+	"github.com/google/go-github/v60/github"
+	"github.com/izziiyt/compaa/component"
+	"github.com/izziiyt/compaa/handler"
 )
 
 var (
@@ -66,11 +65,9 @@ func NewRouter(ghtoken string, wc *component.WarnCondition) *Router {
 	if ghtoken != "" {
 		gcli = gcli.WithAuthToken(ghtoken)
 	}
-	ecli := eol.NewClient(nil)
-	ncli := npm.NewClient(nil)
 	return &Router{
-		gomod:       handler.NewGoMod(gcli, ecli, wc),
-		packagejson: handler.NewPackageJSON(gcli, ecli, ncli, wc),
+		gomod:       handler.NewGoMod(gcli, nil, wc),
+		packagejson: handler.NewPackageJSON(gcli, nil, nil, wc),
 	}
 }
 

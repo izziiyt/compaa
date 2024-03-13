@@ -3,14 +3,15 @@ package component
 import (
 	"context"
 	"fmt"
-	"github.com/google/go-github/v60/github"
-	"github.com/izziiyt/compaa/eol"
-	"github.com/izziiyt/compaa/gopkg"
-	"github.com/izziiyt/compaa/npm"
 	"io"
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/google/go-github/v60/github"
+	"github.com/izziiyt/compaa/sdk/eol"
+	"github.com/izziiyt/compaa/sdk/gopkg"
+	"github.com/izziiyt/compaa/sdk/npm"
 )
 
 var (

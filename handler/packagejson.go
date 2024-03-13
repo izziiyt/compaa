@@ -4,13 +4,14 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/google/go-github/v60/github"
-	"github.com/izziiyt/compaa/component"
-	"github.com/izziiyt/compaa/eol"
-	"github.com/izziiyt/compaa/npm"
 	"io"
 	"os"
 	"strings"
+
+	"github.com/google/go-github/v60/github"
+	"github.com/izziiyt/compaa/component"
+	"github.com/izziiyt/compaa/sdk/eol"
+	"github.com/izziiyt/compaa/sdk/npm"
 )
 
 type PackageJSON struct {
@@ -100,10 +101,10 @@ func parsePackageJSON(b []byte) (ps []*pjJSON, err error) {
 	if err = json.Unmarshal(b, &j); err != nil {
 		return
 	}
-	for k, _ := range j.Dependencies {
+	for k := range j.Dependencies {
 		ps = append(ps, &pjJSON{DEV: false, Name: k})
 	}
-	for k, _ := range j.DevDependencies {
+	for k := range j.DevDependencies {
 		ps = append(ps, &pjJSON{DEV: true, Name: k})
 	}
 	return
