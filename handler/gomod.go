@@ -57,14 +57,13 @@ func (h *GoMod) Handle(ctx context.Context, path string) {
 				switch v := t.(type) {
 				case *component.Module:
 					if strings.HasPrefix(v.Name, "github.com") {
-						v.GHOrg, v.GHRepo, err = v.OrgAndRepo()
-						v.Err = err
-					} else if strings.HasPrefix(v.Name, "go.uber") {
-						v.GHOrg = "uber-go"
-						v.GHRepo = strings.Split(v.Name, "/")[1]
+						v.GHOrg, v.GHRepo, v.Err = v.OrgAndRepo()
 					} else if strings.HasPrefix(v.Name, "gopkg.in") {
 						v = v.SyncWithGopkg(ctx, h.gpcli)
+					} else {
+						v.GHOrg, v.GHRepo, v.Err = gopkg.GetRepoFromCustomDomain(ctx, v.Name)
 					}
+
 					v = v.SyncWithGitHub(ctx, h.gcli)
 					v.StoreCache()
 				case *component.Language:

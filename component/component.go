@@ -149,6 +149,15 @@ func (m *Module) SyncWithNPM(ctx context.Context, cli *npm.Client) *Module {
 		m.Err = fmt.Errorf("github url not found in npm %v", v)
 		return m
 	}
+	// for "git+https://github.com/gregberge/svgr.git#main" pattern
+	if tokens := strings.Split(v.Repository.Url, "#"); len(tokens) > 1 {
+		v.Repository.Url = tokens[0]
+	}
+	// for "git+https://github.com/node ./bin/swc-project/pkgs.git" pattern
+	if tokens := strings.Split(v.Repository.Url, " "); len(tokens) > 1 {
+		tokens = strings.Split(tokens[1], "/")
+		v.Repository.Url = "git+https://github.com/" + strings.Join(tokens[len(tokens)-2:], "/")
+	}
 	tokens := strings.Split(v.Repository.Url, "/")
 	m.GHOrg = tokens[3]
 	m.GHRepo = strings.TrimSuffix(tokens[4], ".git")

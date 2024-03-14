@@ -65,12 +65,15 @@ func (c *Client) FetchLatestVersion(ctx context.Context, lib string) (*Version, 
 			return nil, err
 		}
 		v.Repository.Url = v1.Repository
-		v.Repository.Type = "git"
 	}
 
 	if !strings.Contains(v.Repository.Url, "github.com") {
-		return nil, fmt.Errorf("github url not found in npm %v", v)
+		return nil, fmt.Errorf("unsupported registry %v", v.Repository.Url)
 	}
+
+	// Note: https://registry.npmjs.org/eslint-config-next/latest
+	// does not have "repository.type" field
+	v.Repository.Type = "git"
 
 	return v, nil
 }
