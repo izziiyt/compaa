@@ -97,20 +97,19 @@ func (t *Module) SyncWithGitHub(ctx context.Context, cli *github.Client) *Module
 	return t
 }
 
-func (t *Module) Logging(wc *WarnCondition) error {
+func (t *Module) Logging(wc *WarnCondition) {
 	if t.Err != nil {
-		_, err := fmt.Printf("├ ERROR: %v %v\n", t.Name, t.Err)
-		return err
+		fmt.Printf("├ ERROR: %v %v\n", t.Name, t.Err)
+		return
 	}
 	if wc.IfArchived && t.Archived {
-		_, err := fmt.Printf("├ WARN: %v is archived\n", t.Name)
-		return err
+		fmt.Printf("├ WARN: %v is archived\n", t.Name)
+		return
 	}
 	if t.LastPush.AddDate(0, 0, wc.RecentDays).Before(time.Now()) {
-		_, err := fmt.Printf("├ WARN: %v last push isn't recent (%v)\n", t.Name, t.LastPush)
-		return err
+		fmt.Printf("├ WARN: %v last push isn't recent (%v)\n", t.Name, t.LastPush)
+		return
 	}
 	// _, err := fmt.Fprintf(w, "├ INFO: pass %v last push is recent (%v)\n", t.Name, t.LastPush)
 	// return err
-	return nil
 }

@@ -10,7 +10,7 @@ var (
 )
 
 type Component interface {
-	Logging(wc *WarnCondition) error
+	Logging(wc *WarnCondition)
 	LoadCache() bool
 	StoreCache()
 }

@@ -68,17 +68,16 @@ func init() {
 	imageCache = sync.Map{}
 }
 
-func (c *Image) Logging(wc *WarnCondition) error {
+func (c *Image) Logging(wc *WarnCondition) {
 	if c.Err != nil {
-		_, err := fmt.Printf("├ ERROR: %v %v\n", c.RawString(), c.Err)
-		return err
+		fmt.Printf("├ ERROR: %v %v\n", c.RawString(), c.Err)
+		return
 	}
 	if c.LastUpdate.AddDate(0, 0, wc.RecentDays).Before(time.Now()) {
-		_, err := fmt.Printf("├ WARN: %v last update isn't recent (%v)\n", c.RawString(), c.LastUpdate)
-		return err
+		fmt.Printf("├ WARN: %v last update isn't recent (%v)\n", c.RawString(), c.LastUpdate)
+		return
 	}
 	// fmt.Printf("├ INFO: pass %v (%v)\n", c.RawString(), c.LastUpdate)
-	return nil
 }
 
 func (c *Image) LoadCache() bool {

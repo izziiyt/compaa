@@ -31,22 +31,21 @@ func (t *Language) SyncWithEndOfLife(ctx context.Context, cli *eol.Client) *Lang
 	return t
 }
 
-func (t *Language) Logging(wc *WarnCondition) error {
+func (t *Language) Logging(wc *WarnCondition) {
 	if t.Err != nil {
-		_, err := fmt.Printf("├ ERROR: %v %v\n", t.Name, t.Err)
-		return err
+		fmt.Printf("├ ERROR: %v %v\n", t.Name, t.Err)
+		return
 	}
 	if wc.IfArchived && t.EOL {
-		_, err := fmt.Printf("├ WARN: %v%v is EOL\n", t.Name, t.Version)
-		return err
+		fmt.Printf("├ WARN: %v%v is EOL\n", t.Name, t.Version)
+		return
 	}
 	if !t.EOLDate.IsZero() && time.Now().AddDate(0, 0, wc.RecentDays).After(t.EOLDate) {
-		_, err := fmt.Printf("├ WARN: %v%v EOL is recent\n", t.Name, t.Version)
-		return err
+		fmt.Printf("├ WARN: %v%v EOL is recent\n", t.Name, t.Version)
+		return
 	}
 	// _, err := fmt.Fprintf(w, "├ INFO: pass %v%v\n", t.Name, t.Version)
 	// return err
-	return nil
 }
 
 func (t *Language) LoadCache() bool {
