@@ -48,6 +48,7 @@ func main() {
 type Router struct {
 	gomod       *handler.GoMod
 	packagejson *handler.PackageJSON
+	dockerfile  *handler.Dockerfile
 }
 
 func NewRouter(ghtoken string, wc *component.WarnCondition) *Router {
@@ -58,6 +59,7 @@ func NewRouter(ghtoken string, wc *component.WarnCondition) *Router {
 	return &Router{
 		gomod:       handler.NewGoMod(gcli, wc),
 		packagejson: handler.NewPackageJSON(gcli, wc),
+		dockerfile:  handler.NewDockerfile(wc),
 	}
 }
 
@@ -67,6 +69,9 @@ func (r *Router) Route(path string) handler.Handler {
 	}
 	if strings.Contains(path, "package.json") {
 		return r.packagejson
+	}
+	if strings.Contains(path, "Dockerfile") {
+		return r.dockerfile
 	}
 	return nil
 }

@@ -82,10 +82,10 @@ func (h *GoMod) Handle(ctx context.Context, path string) {
 func (h *GoMod) LookUp(path string) ([]component.Component, error) {
 	var buf []component.Component
 	f, err := os.Open(path)
-	defer f.Close()
 	if err != nil {
 		return nil, err
 	}
+	defer f.Close()
 
 	b, err := io.ReadAll(f)
 	if err != nil {

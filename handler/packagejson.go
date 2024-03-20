@@ -68,10 +68,10 @@ func (h *PackageJSON) Handle(ctx context.Context, path string) {
 
 func (h *PackageJSON) LookUp(path string) ([]component.Component, error) {
 	f, err := os.Open(path)
-	defer f.Close()
 	if err != nil {
 		return nil, err
 	}
+	defer f.Close()
 
 	b, err := io.ReadAll(f)
 	if err != nil {
