@@ -3,11 +3,18 @@ package component
 import (
 	"context"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/fatih/color"
 	"github.com/izziiyt/compaa/sdk/eol"
 )
+
+var languageCache sync.Map
+
+func init() {
+	languageCache = sync.Map{}
+}
 
 type Language struct {
 	Name    string
@@ -17,9 +24,9 @@ type Language struct {
 	Err     error
 }
 
-func (t *Language) SyncWithEndOfLife(ctx context.Context, cli *eol.Client) *Language {
+func (t *Language) SyncWithEndOfLife(ctx context.Context) *Language {
 	splited := strings.Split(t.Version, ".")
-	cd, err := cli.SingleCycleDetail(ctx, t.Name, strings.Join(splited[0:2], "."))
+	cd, err := eol.SingleCycleDetail(ctx, t.Name, strings.Join(splited[0:2], "."))
 	if err != nil {
 		t.Err = err
 		return t
@@ -44,8 +51,7 @@ func (t *Language) Logging(wc *WarnCondition) {
 		color.Yellow("├ WARN: %v%v EOL is recent\n", t.Name, t.Version)
 		return
 	}
-	// _, err := fmt.Fprintf(w, "├ INFO: pass %v%v\n", t.Name, t.Version)
-	// return err
+	color.Green("├ INFO: pass %v%v\n", t.Name, t.Version)
 }
 
 func (t *Language) LoadCache() bool {

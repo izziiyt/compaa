@@ -9,21 +9,7 @@ import (
 	"strings"
 )
 
-type Client struct {
-	cli     *http.Client
-	BaseURL string
-}
-
-func NewClient(cli *http.Client) *Client {
-	c := &Client{
-		cli:     cli,
-		BaseURL: "https://registry.npmjs.org",
-	}
-	if c.cli == nil {
-		c.cli = http.DefaultClient
-	}
-	return c
-}
+var baseURL = "https://registry.npmjs.org"
 
 type alternativeVersion struct {
 	Repository string `json:"repository"`
@@ -36,12 +22,13 @@ type Version struct {
 	} `json:"repository"`
 }
 
-func (c *Client) FetchLatestVersion(ctx context.Context, lib string) (*Version, error) {
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, fmt.Sprintf("%v/%v/latest", c.BaseURL, lib), nil)
+func FetchLatestVersion(ctx context.Context, lib string) (*Version, error) {
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, fmt.Sprintf("%v/%v/latest", baseURL, lib), nil)
 	if err != nil {
 		return nil, err
 	}
-	res, err := c.cli.Do(req)
+	cli := http.DefaultClient
+	res, err := cli.Do(req)
 	defer res.Body.Close()
 	if err != nil {
 		io.Copy(io.Discard, res.Body)

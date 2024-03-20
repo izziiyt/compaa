@@ -4,19 +4,54 @@ import (
 	"context"
 	"fmt"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/fatih/color"
 	"github.com/google/go-github/v60/github"
 	"github.com/izziiyt/compaa/sdk/gopkg"
 	"github.com/izziiyt/compaa/sdk/npm"
+	"github.com/izziiyt/compaa/sdk/pypi"
 )
 
-func (m *Module) SyncWithNPM(ctx context.Context, cli *npm.Client) *Module {
+var moduleCache sync.Map
+
+func init() {
+	moduleCache = sync.Map{}
+}
+
+type Module struct {
+	Name     string
+	Archived bool
+	LastPush time.Time
+	GHOrg    string
+	GHRepo   string
+	Err      error
+}
+
+func (t *Module) LoadCache() bool {
+	v, ok := moduleCache.Load(t.Name)
+	if ok {
+		_v := v.(*Module)
+		t.Name = _v.Name
+		t.Archived = _v.Archived
+		t.LastPush = _v.LastPush
+		t.GHOrg = _v.GHOrg
+		t.GHRepo = _v.GHRepo
+		t.Err = _v.Err
+	}
+	return ok
+}
+
+func (t *Module) StoreCache() {
+	moduleCache.Store(t.Name, t)
+}
+
+func (m *Module) SyncWithNPM(ctx context.Context) *Module {
 	if m.Err != nil {
 		return m
 	}
-	v, err := cli.FetchLatestVersion(ctx, m.Name)
+	v, err := npm.FetchLatestVersion(ctx, m.Name)
 	if err != nil {
 		m.Err = err
 		return m
@@ -40,21 +75,12 @@ func (m *Module) SyncWithNPM(ctx context.Context, cli *npm.Client) *Module {
 	return m
 }
 
-func (m *Module) SyncWithGopkg(ctx context.Context, cli *gopkg.Client) *Module {
+func (m *Module) SyncWithGopkg(ctx context.Context) *Module {
 	if m.Err != nil {
 		return m
 	}
-	m.GHOrg, m.GHRepo, m.Err = cli.GetGitHub(ctx, m.Name)
+	m.GHOrg, m.GHRepo, m.Err = gopkg.GetGitHub(ctx, m.Name)
 	return m
-}
-
-type Module struct {
-	Name     string
-	Archived bool
-	LastPush time.Time
-	GHOrg    string
-	GHRepo   string
-	Err      error
 }
 
 func (t *Module) OrgAndRepo() (string, string, error) {
@@ -63,24 +89,6 @@ func (t *Module) OrgAndRepo() (string, string, error) {
 		return "", "", fmt.Errorf("unexpected module name %v", t.Name)
 	}
 	return tokens[1], tokens[2], nil
-}
-
-func (t *Module) LoadCache() bool {
-	v, ok := moduleCache.Load(t.Name)
-	if ok {
-		_v := v.(*Module)
-		t.Name = _v.Name
-		t.Archived = _v.Archived
-		t.LastPush = _v.LastPush
-		t.GHOrg = _v.GHOrg
-		t.GHRepo = _v.GHRepo
-		t.Err = _v.Err
-	}
-	return ok
-}
-
-func (t *Module) StoreCache() {
-	moduleCache.Store(t.Name, t)
 }
 
 func (t *Module) SyncWithGitHub(ctx context.Context, cli *github.Client) *Module {
@@ -98,6 +106,21 @@ func (t *Module) SyncWithGitHub(ctx context.Context, cli *github.Client) *Module
 	return t
 }
 
+func (t *Module) SyncWithPypi(ctx context.Context) *Module {
+	if t.Err != nil {
+		return t
+	}
+	r, err := pypi.GetPackage(ctx, t.Name)
+	if err != nil {
+		t.Err = err
+		return t
+	}
+	tokens := strings.Split(r.RepositoryURL, "/")
+	t.GHOrg = tokens[3]
+	t.GHRepo = tokens[4]
+	return t
+}
+
 func (t *Module) Logging(wc *WarnCondition) {
 	if t.Err != nil {
 		color.Red("├ ERROR: %v %v\n", t.Name, t.Err)
@@ -111,6 +134,5 @@ func (t *Module) Logging(wc *WarnCondition) {
 		color.Yellow("├ WARN: %v last push isn't recent (%v)\n", t.Name, t.LastPush)
 		return
 	}
-	// _, err := fmt.Fprintf(w, "├ INFO: pass %v last push is recent (%v)\n", t.Name, t.LastPush)
-	// return err
+	// color.Green("├ INFO: pass %v last push is recent (%v)\n", t.Name, t.LastPush)
 }

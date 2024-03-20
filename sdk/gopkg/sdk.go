@@ -9,24 +9,20 @@ import (
 	"strings"
 )
 
-type Client struct {
-	Cli *http.Client
+var githubURLRegexp *regexp.Regexp
+
+func init() {
+	githubURLRegexp = regexp.MustCompile(`https://github\.com/[\w-]+/[\w-]+`)
 }
 
-func NewClient(cli *http.Client) *Client {
-	if cli == nil {
-		cli = http.DefaultClient
-	}
-	return &Client{Cli: cli}
-}
-
-func (c *Client) GetGitHub(ctx context.Context, name string) (org, repo string, err error) {
+func GetGitHub(ctx context.Context, name string) (org, repo string, err error) {
 	url := fmt.Sprintf("https://%v", name)
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
 		return
 	}
-	res, err := c.Cli.Do(req)
+	cli := http.DefaultClient
+	res, err := cli.Do(req)
 	defer res.Body.Close()
 	if err != nil {
 		io.Copy(io.Discard, res.Body)
@@ -40,10 +36,9 @@ func (c *Client) GetGitHub(ctx context.Context, name string) (org, repo string, 
 	if err != nil {
 		return
 	}
-	re := regexp.MustCompile(`"https://github\.com/.*"`)
-	match := re.FindString(string(b))
+	match := githubURLRegexp.FindString(string(b))
 	tokens := strings.Split(match, "/")
-	if len(tokens) > 5 {
+	if len(tokens) > 4 {
 		org = tokens[3]
 		repo = tokens[4]
 	}

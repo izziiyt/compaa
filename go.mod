@@ -5,7 +5,6 @@ go 1.22
 require (
 	github.com/fatih/color v1.16.0
 	github.com/google/go-github/v60 v60.0.0
-	github.com/labstack/gommon v0.4.2
 	golang.org/x/mod v0.16.0
 )
 

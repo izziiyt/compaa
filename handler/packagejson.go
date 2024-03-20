@@ -8,30 +8,21 @@ import (
 	"os"
 	"sync"
 
+	"github.com/fatih/color"
 	"github.com/google/go-github/v60/github"
 	"github.com/izziiyt/compaa/component"
-	"github.com/izziiyt/compaa/sdk/eol"
-	"github.com/izziiyt/compaa/sdk/npm"
 )
 
 type PackageJSON struct {
-	gcli *github.Client
-	ecli *eol.Client
-	ncli *npm.Client
 	wc   *component.WarnCondition
+	gcli *github.Client
 }
 
-func NewPackageJSON(gcli *github.Client, wc *component.WarnCondition) *PackageJSON {
-	gm := &PackageJSON{
-		gcli: gcli,
-		ecli: eol.NewClient(nil),
-		ncli: npm.NewClient(nil),
-		wc:   wc,
+func NewPackageJSON(wc *component.WarnCondition, gcli *github.Client) *PackageJSON {
+	return &PackageJSON{
+		wc,
+		gcli,
 	}
-	if gm.wc == nil {
-		gm.wc = &component.DefaultWarnCondition
-	}
-	return gm
 }
 
 func (h *PackageJSON) Handle(ctx context.Context, path string) {
@@ -39,7 +30,7 @@ func (h *PackageJSON) Handle(ctx context.Context, path string) {
 
 	ts, err := h.LookUp(path)
 	if err != nil {
-		fmt.Printf("LookUp error: %v", err)
+		color.Red("LookUp error: %v", err)
 		return
 	}
 
@@ -52,7 +43,7 @@ func (h *PackageJSON) Handle(ctx context.Context, path string) {
 			if ok := t.LoadCache(); !ok {
 				switch v := t.(type) {
 				case *component.Module:
-					v = v.SyncWithNPM(ctx, h.ncli)
+					v = v.SyncWithNPM(ctx)
 					v = v.SyncWithGitHub(ctx, h.gcli)
 					v.StoreCache()
 				}

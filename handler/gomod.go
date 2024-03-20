@@ -8,31 +8,23 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/fatih/color"
 	"github.com/google/go-github/v60/github"
 	"github.com/izziiyt/compaa/component"
-	"github.com/izziiyt/compaa/sdk/eol"
 	"github.com/izziiyt/compaa/sdk/gopkg"
 	"golang.org/x/mod/modfile"
 )
 
 type GoMod struct {
-	gcli  *github.Client
-	ecli  *eol.Client
-	gpcli *gopkg.Client
-	wc    *component.WarnCondition
+	wc   *component.WarnCondition
+	gcli *github.Client
 }
 
-func NewGoMod(gcli *github.Client, wc *component.WarnCondition) *GoMod {
-	gm := &GoMod{
-		gcli:  gcli,
-		ecli:  eol.NewClient(nil),
-		gpcli: gopkg.NewClient(nil),
-		wc:    wc,
+func NewGoMod(wc *component.WarnCondition, gcli *github.Client) *GoMod {
+	return &GoMod{
+		wc,
+		gcli,
 	}
-	if gm.wc == nil {
-		gm.wc = &component.DefaultWarnCondition
-	}
-	return gm
 }
 
 func (h *GoMod) Handle(ctx context.Context, path string) {
@@ -40,7 +32,7 @@ func (h *GoMod) Handle(ctx context.Context, path string) {
 
 	ts, err := h.LookUp(path)
 	if err != nil {
-		fmt.Printf("├ LookUp error: %v\n", err)
+		color.Red("├ LookUp error: %v\n", err)
 	}
 
 	wg := &sync.WaitGroup{}
@@ -59,7 +51,7 @@ func (h *GoMod) Handle(ctx context.Context, path string) {
 					if strings.HasPrefix(v.Name, "github.com") {
 						v.GHOrg, v.GHRepo, v.Err = v.OrgAndRepo()
 					} else if strings.HasPrefix(v.Name, "gopkg.in") {
-						v = v.SyncWithGopkg(ctx, h.gpcli)
+						v = v.SyncWithGopkg(ctx)
 					} else {
 						v.GHOrg, v.GHRepo, v.Err = gopkg.GetRepoFromCustomDomain(ctx, v.Name)
 					}
@@ -67,7 +59,7 @@ func (h *GoMod) Handle(ctx context.Context, path string) {
 					v = v.SyncWithGitHub(ctx, h.gcli)
 					v.StoreCache()
 				case *component.Language:
-					v = v.SyncWithEndOfLife(ctx, h.ecli)
+					v = v.SyncWithEndOfLife(ctx)
 					v.StoreCache()
 				}
 			}

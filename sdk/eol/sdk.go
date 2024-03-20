@@ -9,14 +9,7 @@ import (
 	"time"
 )
 
-type Client struct {
-	cli     *http.Client
-	BaseURL string
-}
-
-func NewClient(cli *http.Client) *Client {
-	return &Client{cli: http.DefaultClient, BaseURL: "https://endoflife.date/api"}
-}
+var baseURL = "https://endoflife.date/api"
 
 type cycleDetail struct {
 	ReleaseDate       string      `json:"releaseDate"`
@@ -71,13 +64,14 @@ func NewCycleDetail(cd *cycleDetail) (CD *CycleDetail, err error) {
 	return
 }
 
-func (c *Client) SingleCycleDetail(ctx context.Context, product, cycle string) (*CycleDetail, error) {
-	url := fmt.Sprintf("%s/%s/%s.json", c.BaseURL, product, cycle)
+func SingleCycleDetail(ctx context.Context, product, cycle string) (*CycleDetail, error) {
+	url := fmt.Sprintf("%s/%s/%s.json", baseURL, product, cycle)
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
 		return nil, err
 	}
-	res, err := c.cli.Do(req)
+	cli := http.DefaultClient
+	res, err := cli.Do(req)
 	defer res.Body.Close()
 	if err != nil {
 		io.Copy(io.Discard, res.Body)

@@ -8,6 +8,7 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/fatih/color"
 	"github.com/izziiyt/compaa/component"
 )
 
@@ -16,7 +17,9 @@ type Dockerfile struct {
 }
 
 func NewDockerfile(wc *component.WarnCondition) *Dockerfile {
-	return &Dockerfile{wc}
+	return &Dockerfile{
+		wc,
+	}
 }
 
 func (h *Dockerfile) Handle(ctx context.Context, path string) {
@@ -24,7 +27,7 @@ func (h *Dockerfile) Handle(ctx context.Context, path string) {
 
 	cs, err := h.LookUp(path)
 	if err != nil {
-		fmt.Printf("├ LookUp error: %v\n", err)
+		color.Red("├ LookUp error: %v\n", err)
 	}
 
 	wg := &sync.WaitGroup{}

@@ -33,11 +33,9 @@ func main() {
 		if d.IsDir() && strings.Contains(d.Name(), "node_modules") {
 			return filepath.SkipDir
 		}
-		h := r.Route(path)
-		if h == nil {
-			return nil
+		if h := r.Route(d.Name()); h != nil {
+			h.Handle(ctx, path)
 		}
-		h.Handle(ctx, path)
 		return nil
 	})
 	if err != nil {
@@ -46,9 +44,10 @@ func main() {
 }
 
 type Router struct {
-	gomod       *handler.GoMod
-	packagejson *handler.PackageJSON
-	dockerfile  *handler.Dockerfile
+	gomod           *handler.GoMod
+	packagejson     *handler.PackageJSON
+	dockerfile      *handler.Dockerfile
+	requirementstxt *handler.RequirementsTXT
 }
 
 func NewRouter(ghtoken string, wc *component.WarnCondition) *Router {
@@ -57,21 +56,26 @@ func NewRouter(ghtoken string, wc *component.WarnCondition) *Router {
 		gcli = gcli.WithAuthToken(ghtoken)
 	}
 	return &Router{
-		gomod:       handler.NewGoMod(gcli, wc),
-		packagejson: handler.NewPackageJSON(gcli, wc),
-		dockerfile:  handler.NewDockerfile(wc),
+		gomod:           handler.NewGoMod(wc, gcli),
+		packagejson:     handler.NewPackageJSON(wc, gcli),
+		dockerfile:      handler.NewDockerfile(wc),
+		requirementstxt: handler.NewRequirementsTXT(wc, gcli),
 	}
 }
 
 func (r *Router) Route(path string) handler.Handler {
+	path = strings.ToLower(path)
 	if strings.Contains(path, "go.mod") {
 		return r.gomod
 	}
 	if strings.Contains(path, "package.json") {
 		return r.packagejson
 	}
-	if strings.Contains(path, "Dockerfile") {
+	if strings.Contains(path, "dockerfile") {
 		return r.dockerfile
+	}
+	if strings.Contains(path, "requirements") && strings.Contains(path, ".txt") {
+		return r.requirementstxt
 	}
 	return nil
 }
