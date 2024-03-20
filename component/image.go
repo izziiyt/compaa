@@ -7,6 +7,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/fatih/color"
 	"github.com/izziiyt/compaa/sdk/dockerhub"
 	"github.com/izziiyt/compaa/sdk/gcrio"
 )
@@ -70,11 +71,11 @@ func init() {
 
 func (c *Image) Logging(wc *WarnCondition) {
 	if c.Err != nil {
-		fmt.Printf("├ ERROR: %v %v\n", c.RawString(), c.Err)
+		color.Red("├ ERROR: %v %v\n", c.RawString(), c.Err)
 		return
 	}
 	if c.LastUpdate.AddDate(0, 0, wc.RecentDays).Before(time.Now()) {
-		fmt.Printf("├ WARN: %v last update isn't recent (%v)\n", c.RawString(), c.LastUpdate)
+		color.Yellow("├ WARN: %v last update isn't recent (%v)\n", c.RawString(), c.LastUpdate)
 		return
 	}
 	// fmt.Printf("├ INFO: pass %v (%v)\n", c.RawString(), c.LastUpdate)

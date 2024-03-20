@@ -2,10 +2,10 @@ package component
 
 import (
 	"context"
-	"fmt"
 	"strings"
 	"time"
 
+	"github.com/fatih/color"
 	"github.com/izziiyt/compaa/sdk/eol"
 )
 
@@ -33,15 +33,15 @@ func (t *Language) SyncWithEndOfLife(ctx context.Context, cli *eol.Client) *Lang
 
 func (t *Language) Logging(wc *WarnCondition) {
 	if t.Err != nil {
-		fmt.Printf("├ ERROR: %v %v\n", t.Name, t.Err)
+		color.Red("├ ERROR: %v %v\n", t.Name, t.Err)
 		return
 	}
 	if wc.IfArchived && t.EOL {
-		fmt.Printf("├ WARN: %v%v is EOL\n", t.Name, t.Version)
+		color.Yellow("├ WARN: %v%v is EOL\n", t.Name, t.Version)
 		return
 	}
 	if !t.EOLDate.IsZero() && time.Now().AddDate(0, 0, wc.RecentDays).After(t.EOLDate) {
-		fmt.Printf("├ WARN: %v%v EOL is recent\n", t.Name, t.Version)
+		color.Yellow("├ WARN: %v%v EOL is recent\n", t.Name, t.Version)
 		return
 	}
 	// _, err := fmt.Fprintf(w, "├ INFO: pass %v%v\n", t.Name, t.Version)

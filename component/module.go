@@ -6,6 +6,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/fatih/color"
 	"github.com/google/go-github/v60/github"
 	"github.com/izziiyt/compaa/sdk/gopkg"
 	"github.com/izziiyt/compaa/sdk/npm"
@@ -99,15 +100,15 @@ func (t *Module) SyncWithGitHub(ctx context.Context, cli *github.Client) *Module
 
 func (t *Module) Logging(wc *WarnCondition) {
 	if t.Err != nil {
-		fmt.Printf("├ ERROR: %v %v\n", t.Name, t.Err)
+		color.Red("├ ERROR: %v %v\n", t.Name, t.Err)
 		return
 	}
 	if wc.IfArchived && t.Archived {
-		fmt.Printf("├ WARN: %v is archived\n", t.Name)
+		color.Yellow("├ WARN: %v is archived\n", t.Name)
 		return
 	}
 	if t.LastPush.AddDate(0, 0, wc.RecentDays).Before(time.Now()) {
-		fmt.Printf("├ WARN: %v last push isn't recent (%v)\n", t.Name, t.LastPush)
+		color.Yellow("├ WARN: %v last push isn't recent (%v)\n", t.Name, t.LastPush)
 		return
 	}
 	// _, err := fmt.Fprintf(w, "├ INFO: pass %v last push is recent (%v)\n", t.Name, t.LastPush)
