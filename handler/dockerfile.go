@@ -40,7 +40,7 @@ func (h *Dockerfile) Handle(ctx context.Context, path string) {
 			if ok := c.LoadCache(); !ok {
 				switch v := c.(type) {
 				case *component.Image:
-					v = v.SyncWithDockerHub(ctx)
+					v = v.SyncWithRegistry(ctx)
 					v.StoreCache()
 				}
 			}

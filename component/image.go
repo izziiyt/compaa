@@ -8,10 +8,12 @@ import (
 	"time"
 
 	"github.com/izziiyt/compaa/sdk/dockerhub"
+	"github.com/izziiyt/compaa/sdk/gcrio"
 )
 
 var (
 	DockerHubRegistry          = "docker.io"
+	GoogleContainerRegistry    = "gcr.io"
 	DockerHubOfficialNamespace = "library"
 	DefaultTag                 = "latest"
 )
@@ -75,6 +77,7 @@ func (c *Image) Logging(wc *WarnCondition) error {
 		_, err := fmt.Printf("├ WARN: %v last update isn't recent (%v)\n", c.RawString(), c.LastUpdate)
 		return err
 	}
+	// fmt.Printf("├ INFO: pass %v (%v)\n", c.RawString(), c.LastUpdate)
 	return nil
 }
 
@@ -96,16 +99,26 @@ func (c *Image) StoreCache() {
 	imageCache.Store(c.RawString(), c)
 }
 
-func (c *Image) SyncWithDockerHub(ctx context.Context) *Image {
-	if c.Registry != DockerHubRegistry {
-		c.Err = fmt.Errorf("unsupported registry: %s", c.Registry)
+func (c *Image) SyncWithRegistry(ctx context.Context) *Image {
+	if c.Registry == GoogleContainerRegistry {
+		r, err := gcrio.ReadTag(ctx, c.Namespace, c.Repository, c.Tag)
+		if err != nil {
+			c.Err = err
+			return c
+		}
+		c.LastUpdate = r.Uploaded
 		return c
 	}
-	r, err := dockerhub.ReadTag(ctx, c.Namespace, c.Repository, c.Tag)
-	if err != nil {
-		c.Err = err
+	if c.Registry == DockerHubRegistry {
+		r, err := dockerhub.ReadTag(ctx, c.Namespace, c.Repository, c.Tag)
+		if err != nil {
+			c.Err = err
+			return c
+		}
+		c.LastUpdate = r.LastUpdated
 		return c
 	}
-	c.LastUpdate = r.LastUpdated
+
+	c.Err = fmt.Errorf("unsupported registry: %s", c.Registry)
 	return c
 }
