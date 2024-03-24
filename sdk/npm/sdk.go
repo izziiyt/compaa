@@ -29,11 +29,10 @@ func FetchLatestVersion(ctx context.Context, lib string) (*Version, error) {
 	}
 	cli := http.DefaultClient
 	res, err := cli.Do(req)
-	defer res.Body.Close()
 	if err != nil {
-		io.Copy(io.Discard, res.Body)
 		return nil, err
 	}
+	defer res.Body.Close()
 
 	if res.StatusCode != http.StatusOK {
 		io.Copy(io.Discard, res.Body)

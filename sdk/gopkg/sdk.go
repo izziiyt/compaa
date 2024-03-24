@@ -19,11 +19,11 @@ func GetGitHub(ctx context.Context, name string) (org, repo string, err error) {
 	}
 	cli := http.DefaultClient
 	res, err := cli.Do(req)
-	defer res.Body.Close()
 	if err != nil {
-		io.Copy(io.Discard, res.Body)
 		return
 	}
+	defer res.Body.Close()
+
 	if res.StatusCode != http.StatusOK {
 		io.Copy(io.Discard, res.Body)
 		return

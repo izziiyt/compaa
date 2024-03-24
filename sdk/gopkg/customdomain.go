@@ -16,11 +16,10 @@ func GetRepoFromCustomDomain(ctx context.Context, name string) (org, repo string
 		return
 	}
 	res, err := http.DefaultClient.Do(req)
-	defer res.Body.Close()
 	if err != nil {
-		io.Copy(io.Discard, res.Body)
 		return
 	}
+	defer res.Body.Close()
 	if res.StatusCode != http.StatusOK {
 		io.Copy(io.Discard, res.Body)
 		return

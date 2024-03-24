@@ -5,6 +5,7 @@ import (
 	"flag"
 	"fmt"
 	"io/fs"
+	"os"
 	"path/filepath"
 	"strings"
 
@@ -24,6 +25,10 @@ func main() {
 	path := "."
 	if len(args) > 0 {
 		path = args[0]
+		if _, err := os.Stat(path); os.IsNotExist(err) {
+			fmt.Println(path + " not found")
+			return
+		}
 	}
 	ctx := context.Background()
 	wc := &component.DefaultWarnCondition
