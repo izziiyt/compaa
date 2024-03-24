@@ -9,11 +9,7 @@ import (
 	"strings"
 )
 
-var githubURLRegexp *regexp.Regexp
-
-func init() {
-	githubURLRegexp = regexp.MustCompile(`https://github\.com/[\w-]+/[\w-]+`)
-}
+var githubURLRegexp = regexp.MustCompile(`https://github\.com/[\w-]+/[\w-]+`)
 
 func GetGitHub(ctx context.Context, name string) (org, repo string, err error) {
 	url := fmt.Sprintf("https://%v", name)

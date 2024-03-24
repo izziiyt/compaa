@@ -11,7 +11,7 @@ import (
 	"time"
 )
 
-var baseURL = "https://gcr.io/v2"
+const baseURL = "https://gcr.io/v2"
 
 type _response struct {
 	Manifest map[string]*Response `json:"manifest"`

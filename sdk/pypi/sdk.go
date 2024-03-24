@@ -9,13 +9,9 @@ import (
 	"regexp"
 )
 
-var baseURL = "https://pypi.org/pypi"
+const baseURL = "https://pypi.org/pypi"
 
-var githubURLRegexp *regexp.Regexp
-
-func init() {
-	githubURLRegexp = regexp.MustCompile(`https://github\.com/[\w-]+/[\w-]+`)
-}
+var githubURLRegexp = regexp.MustCompile(`https://github\.com/[\w-]+/[\w-]+`)
 
 type Response struct {
 	Info struct {

@@ -9,7 +9,7 @@ import (
 	"time"
 )
 
-var baseURL = "https://endoflife.date/api"
+const baseURL = "https://endoflife.date/api"
 
 type cycleDetail struct {
 	ReleaseDate       string      `json:"releaseDate"`

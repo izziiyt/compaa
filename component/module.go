@@ -15,11 +15,7 @@ import (
 	"github.com/izziiyt/compaa/sdk/rubygem"
 )
 
-var moduleCache sync.Map
-
-func init() {
-	moduleCache = sync.Map{}
-}
+var moduleCache = sync.Map{}
 
 type Module struct {
 	Name     string

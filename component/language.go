@@ -10,11 +10,7 @@ import (
 	"github.com/izziiyt/compaa/sdk/eol"
 )
 
-var languageCache sync.Map
-
-func init() {
-	languageCache = sync.Map{}
-}
+var languageCache = sync.Map{}
 
 type Language struct {
 	Name    string

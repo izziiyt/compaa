@@ -9,16 +9,12 @@ import (
 	"regexp"
 )
 
-var baseURL = "https://rubygems.org/api/v1/gems"
+const baseURL = "https://rubygems.org/api/v1/gems"
 
 var githubURLRegexp = regexp.MustCompile(`https://github\.com/[\w-]+/[\w-]+`)
 
 type Response struct {
-	SourceCodeURI string `json:"source_code_uri"`
-	// MetaData      struct {
-	// 	HomepageURI  string `json:"homepage_uri"`
-	// 	ChangeLogURI string `json:"changelog_uri"`
-	// }
+	SourceCodeURI    string `json:"source_code_uri"`
 	HomepageURI      string `json:"homepage_uri"`
 	DocumentationURI string `json:"documentation_uri"`
 	BugTrackerURI    string `json:"bug_tracker_uri"`

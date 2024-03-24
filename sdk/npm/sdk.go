@@ -9,7 +9,7 @@ import (
 	"strings"
 )
 
-var baseURL = "https://registry.npmjs.org"
+const baseURL = "https://registry.npmjs.org"
 
 type alternativeVersion struct {
 	Repository string `json:"repository"`

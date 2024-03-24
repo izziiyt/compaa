@@ -19,11 +19,7 @@ var (
 	DefaultTag                 = "latest"
 )
 
-var imageCache sync.Map
-
-func init() {
-	imageCache = sync.Map{}
-}
+var imageCache = sync.Map{}
 
 type Image struct {
 	RawString  string

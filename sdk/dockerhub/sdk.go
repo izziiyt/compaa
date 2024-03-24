@@ -9,7 +9,7 @@ import (
 	"time"
 )
 
-var baseURL = "https://hub.docker.com/v2"
+const baseURL = "https://hub.docker.com/v2"
 
 type Response struct {
 	LastUpdated   time.Time `json:"last_updated"`
