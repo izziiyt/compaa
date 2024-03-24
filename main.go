@@ -48,6 +48,7 @@ type Router struct {
 	packagejson     *handler.PackageJSON
 	dockerfile      *handler.Dockerfile
 	requirementstxt *handler.RequirementsTXT
+	gemfile         *handler.GemFile
 }
 
 func NewRouter(ghtoken string, wc *component.WarnCondition) *Router {
@@ -60,6 +61,7 @@ func NewRouter(ghtoken string, wc *component.WarnCondition) *Router {
 		packagejson:     handler.NewPackageJSON(wc, gcli),
 		dockerfile:      handler.NewDockerfile(wc),
 		requirementstxt: handler.NewRequirementsTXT(wc, gcli),
+		gemfile:         handler.NewGemFile(wc, gcli),
 	}
 }
 
@@ -76,6 +78,9 @@ func (r *Router) Route(path string) handler.Handler {
 	}
 	if strings.Contains(path, "requirements") && strings.Contains(path, ".txt") {
 		return r.requirementstxt
+	}
+	if strings.Contains(path, "gemfile") {
+		return r.gemfile
 	}
 	return nil
 }

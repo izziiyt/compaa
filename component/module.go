@@ -12,6 +12,7 @@ import (
 	"github.com/izziiyt/compaa/sdk/gopkg"
 	"github.com/izziiyt/compaa/sdk/npm"
 	"github.com/izziiyt/compaa/sdk/pypi"
+	"github.com/izziiyt/compaa/sdk/rubygem"
 )
 
 var moduleCache sync.Map
@@ -116,6 +117,37 @@ func (t *Module) SyncWithPypi(ctx context.Context) *Module {
 		return t
 	}
 	tokens := strings.Split(r.RepositoryURL, "/")
+	t.GHOrg = tokens[3]
+	t.GHRepo = tokens[4]
+	return t
+}
+
+func (t *Module) SyncWithRubyGem(ctx context.Context) *Module {
+	if t.Err != nil {
+		return t
+	}
+	r, err := rubygem.GetGem(ctx, t.Name)
+	if err != nil {
+		t.Err = err
+		return t
+	}
+	var uri string
+	if strings.Contains(r.SourceCodeURI, "github.com") {
+		uri = r.SourceCodeURI
+	} else if strings.Contains(r.DocumentationURI, "github.com") {
+		uri = r.DocumentationURI
+	} else if strings.Contains(r.HomepageURI, "github.com") {
+		uri = r.HomepageURI
+	}
+	if uri == "" {
+		t.Err = fmt.Errorf("github url not found in rubygem %v", r)
+		return t
+	}
+	tokens := strings.Split(uri, "/")
+	if len(tokens) < 4 {
+		t.Err = fmt.Errorf("unexpected source code uri %v", uri)
+		return t
+	}
 	t.GHOrg = tokens[3]
 	t.GHRepo = tokens[4]
 	return t

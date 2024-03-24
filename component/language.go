@@ -51,7 +51,7 @@ func (t *Language) Logging(wc *WarnCondition) {
 		color.Yellow("├ WARN: %v%v EOL is recent\n", t.Name, t.Version)
 		return
 	}
-	color.Green("├ INFO: pass %v%v\n", t.Name, t.Version)
+	// color.Green("├ INFO: pass %v%v\n", t.Name, t.Version)
 }
 
 func (t *Language) LoadCache() bool {

@@ -47,7 +47,7 @@ func NewCycleDetail(cd *cycleDetail) (CD *CycleDetail, err error) {
 	case bool:
 		CD.EOL = false
 	case string:
-		CD.EOL = true
+		CD.EOL = false
 		CD.EOLDate, err = time.Parse(time.DateOnly, v)
 		if err != nil {
 			CD = nil
