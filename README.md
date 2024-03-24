@@ -33,6 +33,7 @@ This project is licensed under the MIT License, see the LICENSE file for details
 - go.mod
 - package.json
 - Dockerfile
+- requirements.txt
 
 # Note
 
