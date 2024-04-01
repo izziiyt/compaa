@@ -11,20 +11,13 @@ import (
 )
 
 type RequirementsTXT struct {
-	gcli *github.Client
+	GCli *github.Client
 }
 
-func NewRequirementsTXT(gcli *github.Client) *RequirementsTXT {
-	return &RequirementsTXT{
-		gcli,
-	}
-}
-
-func (h *RequirementsTXT) LookUp(path string) ([]component.Component, error) {
-	var buf []component.Component
+func (h *RequirementsTXT) LookUp(path string) (buf []component.Component, err error) {
 	f, err := os.Open(path)
 	if err != nil {
-		return nil, err
+		return
 	}
 	defer f.Close()
 
@@ -50,14 +43,14 @@ func (h *RequirementsTXT) LookUp(path string) ([]component.Component, error) {
 		buf = append(buf, c)
 	}
 
-	return buf, nil
+	return
 }
 
 func (h *RequirementsTXT) SyncWithSource(c component.Component, ctx context.Context) component.Component {
 	switch v := c.(type) {
 	case *component.Module:
 		v = v.SyncWithPypi(ctx)
-		v = v.SyncWithGitHub(ctx, h.gcli)
+		v = v.SyncWithGitHub(ctx, h.GCli)
 		return v
 	default:
 		return v

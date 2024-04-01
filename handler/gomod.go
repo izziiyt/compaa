@@ -13,31 +13,24 @@ import (
 )
 
 type GoMod struct {
-	gcli *github.Client
+	GCli *github.Client
 }
 
-func NewGoMod(gcli *github.Client) *GoMod {
-	return &GoMod{
-		gcli,
-	}
-}
-
-func (h *GoMod) LookUp(path string) ([]component.Component, error) {
-	var buf []component.Component
+func (h *GoMod) LookUp(path string) (buf []component.Component, err error) {
 	f, err := os.Open(path)
 	if err != nil {
-		return nil, err
+		return
 	}
 	defer f.Close()
 
 	b, err := io.ReadAll(f)
 	if err != nil {
-		return nil, err
+		return
 	}
 
 	pf, err := modfile.Parse(path, b, nil)
 	if err != nil {
-		return nil, err
+		return
 	}
 
 	t := &component.Language{
@@ -58,7 +51,7 @@ func (h *GoMod) LookUp(path string) ([]component.Component, error) {
 		buf = append(buf, t)
 	}
 
-	return buf, err
+	return
 }
 
 func (h *GoMod) SyncWithSource(c component.Component, ctx context.Context) component.Component {
@@ -72,7 +65,7 @@ func (h *GoMod) SyncWithSource(c component.Component, ctx context.Context) compo
 			v.GHOrg, v.GHRepo, v.Err = gopkg.GetRepoFromCustomDomain(ctx, v.Name)
 		}
 
-		v = v.SyncWithGitHub(ctx, h.gcli)
+		v = v.SyncWithGitHub(ctx, h.GCli)
 		return v
 	case *component.Language:
 		v = v.SyncWithEndOfLife(ctx)

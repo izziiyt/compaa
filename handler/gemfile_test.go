@@ -8,7 +8,7 @@ import (
 )
 
 func Test_GemfileLookUp(t *testing.T) {
-	h := NewGemFile(nil)
+	h := GemFile{}
 	as, err := h.LookUp("testdata/Gemfile")
 	assert.NilError(t, err)
 	assert.Equal(t, len(as), 7)

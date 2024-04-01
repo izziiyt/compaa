@@ -92,6 +92,9 @@ func (t *Module) SyncWithGitHub(ctx context.Context, cli *github.Client) *Module
 	if t.Err != nil {
 		return t
 	}
+	if cli == nil {
+		cli = github.NewClient(nil)
+	}
 	_r, _, err := cli.Repositories.Get(ctx, t.GHOrg, t.GHRepo)
 	if err != nil {
 		t.Err = err

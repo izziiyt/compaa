@@ -11,37 +11,30 @@ import (
 )
 
 type PackageJSON struct {
-	gcli *github.Client
+	GCli *github.Client
 }
 
-func NewPackageJSON(gcli *github.Client) *PackageJSON {
-	return &PackageJSON{
-		gcli,
-	}
-}
-
-func (h *PackageJSON) LookUp(path string) ([]component.Component, error) {
+func (h *PackageJSON) LookUp(path string) (buf []component.Component, err error) {
 	f, err := os.Open(path)
 	if err != nil {
-		return nil, err
+		return
 	}
 	defer f.Close()
 
 	b, err := io.ReadAll(f)
 	if err != nil {
-		return nil, err
+		return
 	}
 
 	ps, err := parsePackageJSON(b)
-
-	var buf []component.Component
 	for _, p := range ps {
 		t := &component.Module{
 			Name: p.Name,
 		}
 		buf = append(buf, t)
 	}
-	return buf, nil
+
+	return
 }
 
 type pjJSON struct {
@@ -70,7 +63,7 @@ func (h *PackageJSON) SyncWithSource(c component.Component, ctx context.Context)
 	switch v := c.(type) {
 	case *component.Module:
 		v = v.SyncWithNPM(ctx)
-		v = v.SyncWithGitHub(ctx, h.gcli)
+		v = v.SyncWithGitHub(ctx, h.GCli)
 		return v
 	default:
 		return v

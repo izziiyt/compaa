@@ -21,11 +21,11 @@ func NewRouter(ghtoken string) *Router {
 		gcli = gcli.WithAuthToken(ghtoken)
 	}
 	return &Router{
-		gomod:           handler.NewGoMod(gcli),
-		packagejson:     handler.NewPackageJSON(gcli),
+		gomod:           &handler.GoMod{GCli: gcli},
+		packagejson:     &handler.PackageJSON{GCli: gcli},
 		dockerfile:      &handler.Dockerfile{},
-		requirementstxt: handler.NewRequirementsTXT(gcli),
-		gemfile:         handler.NewGemFile(gcli),
+		requirementstxt: &handler.RequirementsTXT{GCli: gcli},
+		gemfile:         &handler.GemFile{GCli: gcli},
 	}
 }
 

@@ -11,11 +11,10 @@ import (
 
 type Dockerfile struct{}
 
-func (h *Dockerfile) LookUp(path string) ([]component.Component, error) {
-	var buf []component.Component
+func (h *Dockerfile) LookUp(path string) (buf []component.Component, err error) {
 	f, err := os.Open(path)
 	if err != nil {
-		return nil, err
+		return
 	}
 	defer f.Close()
 
@@ -32,7 +31,7 @@ func (h *Dockerfile) LookUp(path string) ([]component.Component, error) {
 			buf = append(buf, c)
 		}
 	}
-	return buf, nil
+	return
 }
 
 func (h *Dockerfile) SyncWithSource(c component.Component, ctx context.Context) component.Component {

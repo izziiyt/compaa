@@ -16,20 +16,13 @@ var (
 )
 
 type GemFile struct {
-	gcli *github.Client
+	GCli *github.Client
 }
 
-func NewGemFile(gcli *github.Client) *GemFile {
-	return &GemFile{
-		gcli,
-	}
-}
-
-func (h *GemFile) LookUp(path string) ([]component.Component, error) {
-	var buf []component.Component
+func (h *GemFile) LookUp(path string) (buf []component.Component, err error) {
 	f, err := os.Open(path)
 	if err != nil {
-		return nil, err
+		return
 	}
 	defer f.Close()
 
@@ -51,14 +44,14 @@ func (h *GemFile) LookUp(path string) ([]component.Component, error) {
 		}
 	}
 
-	return buf, nil
+	return
 }
 
 func (h *GemFile) SyncWithSource(c component.Component, ctx context.Context) component.Component {
 	switch v := c.(type) {
 	case *component.Module:
 		v = v.SyncWithRubyGem(ctx)
-		v = v.SyncWithGitHub(ctx, h.gcli)
+		v = v.SyncWithGitHub(ctx, h.GCli)
 		return v
 	case *component.Language:
 		v = v.SyncWithEndOfLife(ctx)
