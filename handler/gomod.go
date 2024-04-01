@@ -13,13 +13,11 @@ import (
 )
 
 type GoMod struct {
-	wc   *component.WarnCondition
 	gcli *github.Client
 }
 
-func NewGoMod(wc *component.WarnCondition, gcli *github.Client) *GoMod {
+func NewGoMod(gcli *github.Client) *GoMod {
 	return &GoMod{
-		wc,
 		gcli,
 	}
 }

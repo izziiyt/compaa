@@ -32,7 +32,7 @@ func main() {
 	ctx := context.Background()
 	wc := &component.DefaultWarnCondition
 	wc.RecentDays = *rd
-	r := NewRouter(*token, wc)
+	r := NewRouter(*token)
 	err := filepath.WalkDir(path, func(path string, d fs.DirEntry, err error) error {
 		if d.IsDir() && excludedPatterns(d.Name()) {
 			return filepath.SkipDir

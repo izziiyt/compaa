@@ -8,7 +8,7 @@ import (
 )
 
 func Test_DockerfileLookUp(t *testing.T) {
-	h := NewDockerfile(nil)
+	h := &Dockerfile{}
 	as, err := h.LookUp("testdata/Dockerfile")
 	assert.NilError(t, err)
 	assert.Equal(t, len(as), 2)

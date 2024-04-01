@@ -4,7 +4,6 @@ import (
 	"strings"
 
 	"github.com/google/go-github/v60/github"
-	"github.com/izziiyt/compaa/component"
 	"github.com/izziiyt/compaa/handler"
 )
 
@@ -16,17 +15,17 @@ type Router struct {
 	gemfile         *handler.GemFile
 }
 
-func NewRouter(ghtoken string, wc *component.WarnCondition) *Router {
+func NewRouter(ghtoken string) *Router {
 	gcli := github.NewClient(nil)
 	if ghtoken != "" {
 		gcli = gcli.WithAuthToken(ghtoken)
 	}
 	return &Router{
-		gomod:           handler.NewGoMod(wc, gcli),
-		packagejson:     handler.NewPackageJSON(wc, gcli),
-		dockerfile:      handler.NewDockerfile(wc),
-		requirementstxt: handler.NewRequirementsTXT(wc, gcli),
-		gemfile:         handler.NewGemFile(wc, gcli),
+		gomod:           handler.NewGoMod(gcli),
+		packagejson:     handler.NewPackageJSON(gcli),
+		dockerfile:      &handler.Dockerfile{},
+		requirementstxt: handler.NewRequirementsTXT(gcli),
+		gemfile:         handler.NewGemFile(gcli),
 	}
 }
 

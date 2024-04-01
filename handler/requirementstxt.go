@@ -11,13 +11,11 @@ import (
 )
 
 type RequirementsTXT struct {
-	wc   *component.WarnCondition
 	gcli *github.Client
 }
 
-func NewRequirementsTXT(wc *component.WarnCondition, gcli *github.Client) *RequirementsTXT {
+func NewRequirementsTXT(gcli *github.Client) *RequirementsTXT {
 	return &RequirementsTXT{
-		wc,
 		gcli,
 	}
 }

@@ -11,13 +11,11 @@ import (
 )
 
 type PackageJSON struct {
-	wc   *component.WarnCondition
 	gcli *github.Client
 }
 
-func NewPackageJSON(wc *component.WarnCondition, gcli *github.Client) *PackageJSON {
+func NewPackageJSON(gcli *github.Client) *PackageJSON {
 	return &PackageJSON{
-		wc,
 		gcli,
 	}
 }

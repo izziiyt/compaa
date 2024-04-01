@@ -16,13 +16,11 @@ var (
 )
 
 type GemFile struct {
-	wc   *component.WarnCondition
 	gcli *github.Client
 }
 
-func NewGemFile(wc *component.WarnCondition, gcli *github.Client) *GemFile {
+func NewGemFile(gcli *github.Client) *GemFile {
 	return &GemFile{
-		wc,
 		gcli,
 	}
 }

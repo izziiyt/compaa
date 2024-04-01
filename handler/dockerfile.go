@@ -9,15 +9,7 @@ import (
 	"github.com/izziiyt/compaa/component"
 )
 
-type Dockerfile struct {
-	wc *component.WarnCondition
-}
-
-func NewDockerfile(wc *component.WarnCondition) *Dockerfile {
-	return &Dockerfile{
-		wc,
-	}
-}
+type Dockerfile struct{}
 
 func (h *Dockerfile) LookUp(path string) ([]component.Component, error) {
 	var buf []component.Component
