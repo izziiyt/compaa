@@ -10,10 +10,11 @@ import (
 	"strings"
 
 	"github.com/izziiyt/compaa/component"
+	"github.com/izziiyt/compaa/handler"
 )
 
 var (
-	rd    = flag.Int("d", 180, "recent days. used to determine log level")
+	rd    = flag.Int("d", 360, "recent days. used to determine log level")
 	token = flag.String("t", "", "github token. recommend to set for sufficient github api rate limit")
 )
 
@@ -37,7 +38,7 @@ func main() {
 			return filepath.SkipDir
 		}
 		if h := r.Route(d.Name()); h != nil {
-			h.Handle(ctx, path)
+			handler.Handle(ctx, h, path, wc)
 		}
 		return nil
 	})

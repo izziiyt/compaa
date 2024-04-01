@@ -3,12 +3,9 @@ package handler
 import (
 	"bufio"
 	"context"
-	"fmt"
 	"os"
 	"strings"
-	"sync"
 
-	"github.com/fatih/color"
 	"github.com/izziiyt/compaa/component"
 )
 
@@ -20,39 +17,6 @@ func NewDockerfile(wc *component.WarnCondition) *Dockerfile {
 	return &Dockerfile{
 		wc,
 	}
-}
-
-func (h *Dockerfile) Handle(ctx context.Context, path string) {
-	fmt.Printf("%v\n", path)
-
-	cs, err := h.LookUp(path)
-	if err != nil {
-		color.Red("├ LookUp error: %v\n", err)
-	}
-
-	wg := &sync.WaitGroup{}
-	done := make(chan struct{}, 10)
-	for _, c := range cs {
-		if ok := c.LoadCache(); ok {
-			c.Logging(h.wc)
-			continue
-		}
-		wg.Add(1)
-		go func(ctx context.Context, c component.Component) {
-			done <- struct{}{}
-			if ok := c.LoadCache(); !ok {
-				switch v := c.(type) {
-				case *component.Image:
-					v = v.SyncWithRegistry(ctx)
-					v.StoreCache()
-				}
-			}
-			c.Logging(h.wc)
-			<-done
-			wg.Done()
-		}(ctx, c)
-	}
-	wg.Wait()
 }
 
 func (h *Dockerfile) LookUp(path string) ([]component.Component, error) {
@@ -77,4 +41,14 @@ func (h *Dockerfile) LookUp(path string) ([]component.Component, error) {
 		}
 	}
 	return buf, nil
+}
+
+func (h *Dockerfile) SyncWithSource(ctx context.Context, c component.Component) component.Component {
+	switch v := c.(type) {
+	case *component.Image:
+		v = v.SyncWithRegistry(ctx)
+		return v
+	default:
+		return v
+	}
 }

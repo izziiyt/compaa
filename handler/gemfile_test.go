@@ -7,9 +7,9 @@ import (
 	"gotest.tools/v3/assert"
 )
 
-func TestLookUp(t *testing.T) {
+func Test_GemfileLookUp(t *testing.T) {
 	h := NewGemFile(nil, nil)
-	as, err := h.LookUp("resources/Gemfile")
+	as, err := h.LookUp("testdata/Gemfile")
 	assert.NilError(t, err)
 	assert.Equal(t, len(as), 7)
 	l := as[0].(*component.Language)

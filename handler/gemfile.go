@@ -3,12 +3,9 @@ package handler
 import (
 	"bufio"
 	"context"
-	"fmt"
 	"os"
 	"regexp"
-	"sync"
 
-	"github.com/fatih/color"
 	"github.com/google/go-github/v60/github"
 	"github.com/izziiyt/compaa/component"
 )
@@ -28,41 +25,6 @@ func NewGemFile(wc *component.WarnCondition, gcli *github.Client) *GemFile {
 		wc,
 		gcli,
 	}
-}
-
-func (h *GemFile) Handle(ctx context.Context, path string) {
-	fmt.Printf("%v\n", path)
-
-	ts, err := h.LookUp(path)
-	if err != nil {
-		color.Red("LookUp error: %v", err)
-		return
-	}
-
-	wg := &sync.WaitGroup{}
-	done := make(chan struct{}, 10)
-	for _, t := range ts {
-		wg.Add(1)
-		go func(ctx context.Context, t component.Component) {
-			done <- struct{}{}
-			if ok := t.LoadCache(); !ok {
-				switch v := t.(type) {
-				case *component.Module:
-					v = v.SyncWithRubyGem(ctx)
-					v = v.SyncWithGitHub(ctx, h.gcli)
-					v.StoreCache()
-				case *component.Language:
-					v = v.SyncWithEndOfLife(ctx)
-					v.StoreCache()
-				}
-			}
-			t.StoreCache()
-			t.Logging(h.wc)
-			<-done
-			wg.Done()
-		}(ctx, t)
-	}
-	wg.Wait()
 }
 
 func (h *GemFile) LookUp(path string) ([]component.Component, error) {
@@ -92,4 +54,18 @@ func (h *GemFile) LookUp(path string) ([]component.Component, error) {
 	}
 
 	return buf, nil
+}
+
+func (h *GemFile) SyncWithSource(ctx context.Context, c component.Component) component.Component {
+	switch v := c.(type) {
+	case *component.Module:
+		v = v.SyncWithRubyGem(ctx)
+		v = v.SyncWithGitHub(ctx, h.gcli)
+		return v
+	case *component.Language:
+		v = v.SyncWithEndOfLife(ctx)
+		return v
+	default:
+		return v
+	}
 }

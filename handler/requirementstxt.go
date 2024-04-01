@@ -3,12 +3,9 @@ package handler
 import (
 	"bufio"
 	"context"
-	"fmt"
 	"os"
 	"strings"
-	"sync"
 
-	"github.com/fatih/color"
 	"github.com/google/go-github/v60/github"
 	"github.com/izziiyt/compaa/component"
 )
@@ -23,39 +20,6 @@ func NewRequirementsTXT(wc *component.WarnCondition, gcli *github.Client) *Requi
 		wc,
 		gcli,
 	}
-}
-
-func (h *RequirementsTXT) Handle(ctx context.Context, path string) {
-	fmt.Printf("%v\n", path)
-
-	ts, err := h.LookUp(path)
-	if err != nil {
-		color.Red("├ LookUp error: %v\n", err)
-	}
-
-	wg := &sync.WaitGroup{}
-	done := make(chan struct{}, 10)
-	for _, t := range ts {
-		if ok := t.LoadCache(); ok {
-			t.Logging(h.wc)
-			continue
-		}
-		wg.Add(1)
-		go func(ctx context.Context, t component.Component) {
-			done <- struct{}{}
-			if ok := t.LoadCache(); !ok {
-				switch v := t.(type) {
-				case *component.Module:
-					v = v.SyncWithPypi(ctx)
-					v = v.SyncWithGitHub(ctx, h.gcli)
-				}
-			}
-			t.Logging(h.wc)
-			<-done
-			wg.Done()
-		}(ctx, t)
-	}
-	wg.Wait()
 }
 
 func (h *RequirementsTXT) LookUp(path string) ([]component.Component, error) {
@@ -89,4 +53,15 @@ func (h *RequirementsTXT) LookUp(path string) ([]component.Component, error) {
 	}
 
 	return buf, nil
+}
+
+func (h *RequirementsTXT) SyncWithSource(ctx context.Context, c component.Component) component.Component {
+	switch v := c.(type) {
+	case *component.Module:
+		v = v.SyncWithPypi(ctx)
+		v = v.SyncWithGitHub(ctx, h.gcli)
+		return v
+	default:
+		return v
+	}
 }
