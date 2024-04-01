@@ -53,7 +53,7 @@ func (h *RequirementsTXT) LookUp(path string) ([]component.Component, error) {
 	return buf, nil
 }
 
-func (h *RequirementsTXT) SyncWithSource(ctx context.Context, c component.Component) component.Component {
+func (h *RequirementsTXT) SyncWithSource(c component.Component, ctx context.Context) component.Component {
 	switch v := c.(type) {
 	case *component.Module:
 		v = v.SyncWithPypi(ctx)

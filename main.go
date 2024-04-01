@@ -38,7 +38,7 @@ func main() {
 			return filepath.SkipDir
 		}
 		if h := r.Route(d.Name()); h != nil {
-			handler.Handle(ctx, h, path, wc)
+			handler.Handle(h, ctx, path, wc)
 		}
 		return nil
 	})

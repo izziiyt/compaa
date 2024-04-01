@@ -35,7 +35,7 @@ func (h *Dockerfile) LookUp(path string) ([]component.Component, error) {
 	return buf, nil
 }
 
-func (h *Dockerfile) SyncWithSource(ctx context.Context, c component.Component) component.Component {
+func (h *Dockerfile) SyncWithSource(c component.Component, ctx context.Context) component.Component {
 	switch v := c.(type) {
 	case *component.Image:
 		v = v.SyncWithRegistry(ctx)

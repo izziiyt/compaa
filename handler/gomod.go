@@ -61,7 +61,7 @@ func (h *GoMod) LookUp(path string) ([]component.Component, error) {
 	return buf, err
 }
 
-func (h *GoMod) SyncWithSource(ctx context.Context, c component.Component) component.Component {
+func (h *GoMod) SyncWithSource(c component.Component, ctx context.Context) component.Component {
 	switch v := c.(type) {
 	case *component.Module:
 		if strings.HasPrefix(v.Name, "github.com") {

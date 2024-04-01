@@ -11,10 +11,10 @@ import (
 
 type Handler interface {
 	LookUp(path string) ([]component.Component, error)
-	SyncWithSource(ctx context.Context, c component.Component) component.Component
+	SyncWithSource(c component.Component, ctx context.Context) component.Component
 }
 
-func Handle(ctx context.Context, h Handler, path string, wc *component.WarnCondition) {
+func Handle(h Handler, ctx context.Context, path string, wc *component.WarnCondition) {
 	fmt.Printf("%v\n", path)
 
 	cs, err := h.LookUp(path)
@@ -32,7 +32,7 @@ func Handle(ctx context.Context, h Handler, path string, wc *component.WarnCondi
 		wg.Add(1)
 		go func(ctx context.Context, c component.Component) {
 			done <- struct{}{}
-			c = h.SyncWithSource(ctx, c)
+			c = h.SyncWithSource(c, ctx)
 			c.StoreCache()
 			c.Logging(wc)
 			<-done

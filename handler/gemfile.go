@@ -54,7 +54,7 @@ func (h *GemFile) LookUp(path string) ([]component.Component, error) {
 	return buf, nil
 }
 
-func (h *GemFile) SyncWithSource(ctx context.Context, c component.Component) component.Component {
+func (h *GemFile) SyncWithSource(c component.Component, ctx context.Context) component.Component {
 	switch v := c.(type) {
 	case *component.Module:
 		v = v.SyncWithRubyGem(ctx)
