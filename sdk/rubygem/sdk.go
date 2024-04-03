@@ -6,12 +6,9 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"regexp"
 )
 
 const baseURL = "https://rubygems.org/api/v1/gems"
-
-var githubURLRegexp = regexp.MustCompile(`https://github\.com/[\w-]+/[\w-]+`)
 
 type Response struct {
 	SourceCodeURI    string `json:"source_code_uri"`
@@ -34,6 +31,7 @@ func GetGem(ctx context.Context, name string) (*Response, error) {
 	defer res.Body.Close()
 
 	if res.StatusCode != http.StatusOK {
+		//nolint:errcheck
 		io.Copy(io.Discard, res.Body)
 		return nil, fmt.Errorf("something wrong with accesing :%v %v", url, res.StatusCode)
 	}

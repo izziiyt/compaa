@@ -35,6 +35,7 @@ func FetchLatestVersion(ctx context.Context, lib string) (*Version, error) {
 	defer res.Body.Close()
 
 	if res.StatusCode != http.StatusOK {
+		//nolint:errcheck
 		io.Copy(io.Discard, res.Body)
 		return nil, fmt.Errorf("")
 	}

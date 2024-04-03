@@ -37,6 +37,7 @@ func ReadTag(ctx context.Context, namespace, repository, tag string) (*Response,
 	defer res.Body.Close()
 
 	if res.StatusCode != http.StatusOK {
+		//nolint:errcheck
 		io.Copy(io.Discard, res.Body)
 		return nil, fmt.Errorf("something wrong with accesing :%v %v", url, res.StatusCode)
 	}

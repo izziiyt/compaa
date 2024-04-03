@@ -21,6 +21,7 @@ func GetRepoFromCustomDomain(ctx context.Context, name string) (org, repo string
 	}
 	defer res.Body.Close()
 	if res.StatusCode != http.StatusOK {
+		//nolint:errcheck
 		io.Copy(io.Discard, res.Body)
 		return
 	}
@@ -34,8 +35,8 @@ func GetRepoFromCustomDomain(ctx context.Context, name string) (org, repo string
 		err = fmt.Errorf("no go-import meta tag found")
 		return
 	}
-	match = strings.Trim(match, "<meta name=\"go-import\" content=\"")
-	match = strings.Trim(match, "\">")
+	match = strings.TrimPrefix(match, "<meta name=\"go-import\" content=\"")
+	match = strings.TrimSuffix(match, "\">")
 	repoUrl := strings.Split(match, " ")[2]
 	tokens := strings.Split(repoUrl, "/")
 	if len(tokens) >= 5 {

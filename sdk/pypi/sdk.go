@@ -34,6 +34,7 @@ func GetPackage(ctx context.Context, name string) (*Response, error) {
 	defer res.Body.Close()
 
 	if res.StatusCode != http.StatusOK {
+		//nolint:errcheck
 		io.Copy(io.Discard, res.Body)
 		return nil, fmt.Errorf("something wrong with accesing :%v %v", url, res.StatusCode)
 	}

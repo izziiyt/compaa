@@ -78,6 +78,7 @@ func SingleCycleDetail(ctx context.Context, product, cycle string) (*CycleDetail
 	defer res.Body.Close()
 
 	if res.StatusCode != http.StatusOK {
+		//nolint:errcheck
 		io.Copy(io.Discard, res.Body)
 		return nil, fmt.Errorf("something wrong with accesing endoflife.date code:%v", res.StatusCode)
 	}

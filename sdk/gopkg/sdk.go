@@ -25,6 +25,7 @@ func GetGitHub(ctx context.Context, name string) (org, repo string, err error) {
 	defer res.Body.Close()
 
 	if res.StatusCode != http.StatusOK {
+		//nolint:errcheck
 		io.Copy(io.Discard, res.Body)
 		return
 	}
