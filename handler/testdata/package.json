@@ -1,0 +1,14 @@
+{
+  "name": "sample",
+  "version": "1.0.0",
+  "description": "example",
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "aws-sdk": "^2.1354.0",
+    "minimist": "^1.2.7"
+  },
+  "dependencies": {
+    "abc" : "0.6.1"
+  }
+}
