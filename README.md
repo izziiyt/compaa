@@ -1,3 +1,5 @@
+![workflow](https://github.com/izziiyt/compaa/actions/workflows/ci.yml/badge.svg)
+
 # Why compaa
 
 compaa is the component activity analysis tool for software security.
@@ -7,7 +9,7 @@ Some tools supports auto update functions, but you may find it sometimes wont' m
 # Install
 
 ```shell
-go intsall github.com/izziiyt/compaa@v0.2.2
+go intsall github.com/izziiyt/compaa@v0.2.3
 ```
 
 # Sample
