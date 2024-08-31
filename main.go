@@ -5,6 +5,7 @@ import (
 	"flag"
 	"fmt"
 	"io/fs"
+	"net/http"
 	"os"
 	"path/filepath"
 	"strings"
@@ -25,8 +26,8 @@ func main() {
 	if len(args) > 0 {
 		path = args[0]
 		if _, err := os.Stat(path); os.IsNotExist(err) {
-			fmt.Println(path + " not found")
-			return
+			fmt.Fprintln(os.Stderr, path+" not found")
+			os.Exit(1)
 		}
 	}
 	ctx := context.Background()
@@ -38,7 +39,9 @@ func main() {
 	if *token == "" {
 		fmt.Println("WARN: recommended to use github token. see `compaa -h`")
 	}
-	r := NewRouter(*token)
+	transport := NewCacheTransport(http.DefaultTransport)
+	defer transport.Close()
+	r := NewRouter(*token, transport)
 	err := filepath.WalkDir(path, func(path string, d fs.DirEntry, err error) error {
 		if d.IsDir() && excludedPatterns(d.Name()) {
 			return filepath.SkipDir
@@ -49,7 +52,8 @@ func main() {
 		return nil
 	})
 	if err != nil {
-		fmt.Println(err)
+		fmt.Fprintln(os.Stderr, err)
+		os.Exit(1)
 	}
 }
 

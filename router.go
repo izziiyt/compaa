@@ -1,10 +1,10 @@
 package main
 
 import (
-	"strings"
-
 	"github.com/google/go-github/v60/github"
 	"github.com/izziiyt/compaa/handler"
+	"net/http"
+	"strings"
 )
 
 type Router struct {
@@ -15,8 +15,11 @@ type Router struct {
 	gemfile         *handler.GemFile
 }
 
-func NewRouter(ghtoken string) *Router {
-	gcli := github.NewClient(nil)
+func NewRouter(ghtoken string, transport http.RoundTripper) *Router {
+	hcli := &http.Client{
+		Transport: transport,
+	}
+	gcli := github.NewClient(hcli)
 	if ghtoken != "" {
 		gcli = gcli.WithAuthToken(ghtoken)
 	}
