@@ -35,7 +35,9 @@ func main() {
 	if *token == "" {
 		*token = os.Getenv("GITHUB_TOKEN")
 	}
-	fmt.Println("token: " + *token)
+	if *token == "" {
+		fmt.Println("WARN: recommended to use github token. see `compaa -h`")
+	}
 	r := NewRouter(*token)
 	err := filepath.WalkDir(path, func(path string, d fs.DirEntry, err error) error {
 		if d.IsDir() && excludedPatterns(d.Name()) {
