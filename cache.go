@@ -43,7 +43,6 @@ func NewCache() *Cache {
 	if err := c.LoadFromFile(cacheFile); err != nil {
 		fmt.Println("Warn: fails loading cache:", err)
 	}
-	fmt.Println("Cache loaded", c.entries)
 	return c
 }
 
