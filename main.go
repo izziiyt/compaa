@@ -15,7 +15,7 @@ import (
 
 var (
 	rd    = flag.Int("d", 360, "recent days. used to determine log level")
-	token = flag.String("t", "", "github token. recommend to set for sufficient github api rate limit")
+	token = flag.String("t", "", "github token. recommended to set for sufficient github api rate limit, or set GITHUB_TOKEN env var")
 )
 
 func main() {
@@ -32,6 +32,10 @@ func main() {
 	ctx := context.Background()
 	wc := &component.DefaultWarnCondition
 	wc.RecentDays = *rd
+	if *token == "" {
+		*token = os.Getenv("GITHUB_TOKEN")
+	}
+	fmt.Println("token: " + *token)
 	r := NewRouter(*token)
 	err := filepath.WalkDir(path, func(path string, d fs.DirEntry, err error) error {
 		if d.IsDir() && excludedPatterns(d.Name()) {
