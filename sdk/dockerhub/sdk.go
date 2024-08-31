@@ -16,8 +16,7 @@ type Response struct {
 	TagLastPushed time.Time `json:"tag_last_pushed"`
 }
 
-func ReadTag(ctx context.Context, namespace, repository, tag string) (*Response, error) {
-	cli := http.DefaultClient
+func ReadTag(ctx context.Context, cli *http.Client, namespace, repository, tag string) (*Response, error) {
 	url := fmt.Sprintf("%s/namespaces/%s/repositories/%s/tags/%s", baseURL, namespace, repository, tag)
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {

@@ -3,13 +3,16 @@ package handler
 import (
 	"bufio"
 	"context"
+	"net/http"
 	"os"
 	"strings"
 
 	"github.com/izziiyt/compaa/component"
 )
 
-type Dockerfile struct{}
+type Dockerfile struct {
+	HTTPClient *http.Client
+}
 
 func (h *Dockerfile) LookUp(path string) (buf []component.Component, err error) {
 	f, err := os.Open(path)
@@ -37,7 +40,7 @@ func (h *Dockerfile) LookUp(path string) (buf []component.Component, err error) 
 func (h *Dockerfile) SyncWithSource(c component.Component, ctx context.Context) component.Component {
 	switch v := c.(type) {
 	case *component.Image:
-		v = v.SyncWithRegistry(ctx)
+		v = v.SyncWithRegistry(ctx, h.HTTPClient)
 		return v
 	default:
 		return v

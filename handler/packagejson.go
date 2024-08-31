@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"io"
+	"net/http"
 	"os"
 
 	"github.com/google/go-github/v60/github"
@@ -11,7 +12,8 @@ import (
 )
 
 type PackageJSON struct {
-	GCli *github.Client
+	GCli       *github.Client
+	HTTPClient *http.Client
 }
 
 func (h *PackageJSON) LookUp(path string) (buf []component.Component, err error) {
@@ -62,7 +64,7 @@ func parsePackageJSON(b []byte) (ps []*pjJSON, err error) {
 func (h *PackageJSON) SyncWithSource(c component.Component, ctx context.Context) component.Component {
 	switch v := c.(type) {
 	case *component.Module:
-		v = v.SyncWithNPM(ctx)
+		v = v.SyncWithNPM(ctx, h.HTTPClient)
 		v = v.SyncWithGitHub(ctx, h.GCli)
 		return v
 	default:

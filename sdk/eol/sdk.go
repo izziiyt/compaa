@@ -64,13 +64,12 @@ func NewCycleDetail(cd *cycleDetail) (CD *CycleDetail, err error) {
 	return
 }
 
-func SingleCycleDetail(ctx context.Context, product, cycle string) (*CycleDetail, error) {
+func SingleCycleDetail(ctx context.Context, cli *http.Client, product, cycle string) (*CycleDetail, error) {
 	url := fmt.Sprintf("%s/%s/%s.json", baseURL, product, cycle)
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
 		return nil, err
 	}
-	cli := http.DefaultClient
 	res, err := cli.Do(req)
 	if err != nil {
 		return nil, err

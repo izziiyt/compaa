@@ -24,11 +24,11 @@ func NewRouter(ghtoken string, transport http.RoundTripper) *Router {
 		gcli = gcli.WithAuthToken(ghtoken)
 	}
 	return &Router{
-		gomod:           &handler.GoMod{GCli: gcli},
-		packagejson:     &handler.PackageJSON{GCli: gcli},
-		dockerfile:      &handler.Dockerfile{},
-		requirementstxt: &handler.RequirementsTXT{GCli: gcli},
-		gemfile:         &handler.GemFile{GCli: gcli},
+		gomod:           &handler.GoMod{GCli: gcli, HTTPClient: hcli},
+		packagejson:     &handler.PackageJSON{GCli: gcli, HTTPClient: hcli},
+		dockerfile:      &handler.Dockerfile{HTTPClient: hcli},
+		requirementstxt: &handler.RequirementsTXT{GCli: gcli, HTTPClient: hcli},
+		gemfile:         &handler.GemFile{GCli: gcli, HTTPClient: hcli},
 	}
 }
 

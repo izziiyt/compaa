@@ -2,6 +2,7 @@ package component
 
 import (
 	"context"
+	"net/http"
 	"strings"
 	"sync"
 	"time"
@@ -20,9 +21,9 @@ type Language struct {
 	Err     error
 }
 
-func (t *Language) SyncWithEndOfLife(ctx context.Context) *Language {
+func (t *Language) SyncWithEndOfLife(ctx context.Context, cli *http.Client) *Language {
 	splited := strings.Split(t.Version, ".")
-	cd, err := eol.SingleCycleDetail(ctx, t.Name, strings.Join(splited[0:2], "."))
+	cd, err := eol.SingleCycleDetail(ctx, cli, t.Name, strings.Join(splited[0:2], "."))
 	if err != nil {
 		t.Err = err
 		return t

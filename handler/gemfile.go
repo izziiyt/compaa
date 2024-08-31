@@ -3,6 +3,7 @@ package handler
 import (
 	"bufio"
 	"context"
+	"net/http"
 	"os"
 	"regexp"
 
@@ -16,7 +17,8 @@ var (
 )
 
 type GemFile struct {
-	GCli *github.Client
+	GCli       *github.Client
+	HTTPClient *http.Client
 }
 
 func (h *GemFile) LookUp(path string) (buf []component.Component, err error) {
@@ -50,11 +52,11 @@ func (h *GemFile) LookUp(path string) (buf []component.Component, err error) {
 func (h *GemFile) SyncWithSource(c component.Component, ctx context.Context) component.Component {
 	switch v := c.(type) {
 	case *component.Module:
-		v = v.SyncWithRubyGem(ctx)
+		v = v.SyncWithRubyGem(ctx, h.HTTPClient)
 		v = v.SyncWithGitHub(ctx, h.GCli)
 		return v
 	case *component.Language:
-		v = v.SyncWithEndOfLife(ctx)
+		v = v.SyncWithEndOfLife(ctx, h.HTTPClient)
 		return v
 	default:
 		return v

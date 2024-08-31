@@ -9,13 +9,13 @@ import (
 	"strings"
 )
 
-func GetRepoFromCustomDomain(ctx context.Context, name string) (org, repo string, err error) {
+func GetRepoFromCustomDomain(ctx context.Context, cli *http.Client, name string) (org, repo string, err error) {
 	url := fmt.Sprintf("https://%v", name)
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
 		return
 	}
-	res, err := http.DefaultClient.Do(req)
+	res, err := cli.Do(req)
 	if err != nil {
 		return
 	}

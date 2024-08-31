@@ -23,8 +23,7 @@ type Response struct {
 	Uploaded       time.Time
 }
 
-func ReadTag(ctx context.Context, namespace, repository, tag string) (*Response, error) {
-	cli := http.DefaultClient
+func ReadTag(ctx context.Context, cli *http.Client, namespace, repository, tag string) (*Response, error) {
 	url := fmt.Sprintf("%s/%s/%s/tags/list", baseURL, namespace, repository)
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {

@@ -22,12 +22,12 @@ type Version struct {
 	} `json:"repository"`
 }
 
-func FetchLatestVersion(ctx context.Context, lib string) (*Version, error) {
+func FetchLatestVersion(ctx context.Context, cli *http.Client, lib string) (*Version, error) {
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, fmt.Sprintf("%v/%v/latest", baseURL, lib), nil)
 	if err != nil {
 		return nil, err
 	}
-	cli := http.DefaultClient
+	// cli := http.DefaultClient
 	res, err := cli.Do(req)
 	if err != nil {
 		return nil, err

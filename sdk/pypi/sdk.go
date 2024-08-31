@@ -20,8 +20,7 @@ type Response struct {
 	RepositoryURL string
 }
 
-func GetPackage(ctx context.Context, name string) (*Response, error) {
-	cli := http.DefaultClient
+func GetPackage(ctx context.Context, cli *http.Client, name string) (*Response, error) {
 	url := fmt.Sprintf("%s/%s/json", baseURL, name)
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {

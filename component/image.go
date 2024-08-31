@@ -3,6 +3,7 @@ package component
 import (
 	"context"
 	"fmt"
+	"net/http"
 	"strings"
 	"sync"
 	"time"
@@ -95,12 +96,12 @@ func (c *Image) StoreCache() {
 	imageCache.Store(c.RawString, c)
 }
 
-func (c *Image) SyncWithRegistry(ctx context.Context) *Image {
+func (c *Image) SyncWithRegistry(ctx context.Context, cli *http.Client) *Image {
 	if c.Err != nil {
 		return c
 	}
 	if c.Registry == GoogleContainerRegistry {
-		r, err := gcrio.ReadTag(ctx, c.Namespace, c.Repository, c.Tag)
+		r, err := gcrio.ReadTag(ctx, cli, c.Namespace, c.Repository, c.Tag)
 		if err != nil {
 			c.Err = err
 			return c
@@ -109,7 +110,7 @@ func (c *Image) SyncWithRegistry(ctx context.Context) *Image {
 		return c
 	}
 	if c.Registry == DockerHubRegistry {
-		r, err := dockerhub.ReadTag(ctx, c.Namespace, c.Repository, c.Tag)
+		r, err := dockerhub.ReadTag(ctx, cli, c.Namespace, c.Repository, c.Tag)
 		if err != nil {
 			c.Err = err
 			return c

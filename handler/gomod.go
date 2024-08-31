@@ -3,6 +3,7 @@ package handler
 import (
 	"context"
 	"io"
+	"net/http"
 	"os"
 	"strings"
 
@@ -13,7 +14,8 @@ import (
 )
 
 type GoMod struct {
-	GCli *github.Client
+	GCli       *github.Client
+	HTTPClient *http.Client
 }
 
 func (h *GoMod) LookUp(path string) (buf []component.Component, err error) {
@@ -60,15 +62,15 @@ func (h *GoMod) SyncWithSource(c component.Component, ctx context.Context) compo
 		if strings.HasPrefix(v.Name, "github.com") {
 			v.GHOrg, v.GHRepo, v.Err = v.OrgAndRepo()
 		} else if strings.HasPrefix(v.Name, "gopkg.in") {
-			v = v.SyncWithGopkg(ctx)
+			v = v.SyncWithGopkg(ctx, h.HTTPClient)
 		} else {
-			v.GHOrg, v.GHRepo, v.Err = gopkg.GetRepoFromCustomDomain(ctx, v.Name)
+			v.GHOrg, v.GHRepo, v.Err = gopkg.GetRepoFromCustomDomain(ctx, h.HTTPClient, v.Name)
 		}
 
 		v = v.SyncWithGitHub(ctx, h.GCli)
 		return v
 	case *component.Language:
-		v = v.SyncWithEndOfLife(ctx)
+		v = v.SyncWithEndOfLife(ctx, h.HTTPClient)
 		return v
 	default:
 		return v

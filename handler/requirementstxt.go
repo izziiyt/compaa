@@ -3,6 +3,7 @@ package handler
 import (
 	"bufio"
 	"context"
+	"net/http"
 	"os"
 	"strings"
 
@@ -11,7 +12,8 @@ import (
 )
 
 type RequirementsTXT struct {
-	GCli *github.Client
+	GCli       *github.Client
+	HTTPClient *http.Client
 }
 
 func (h *RequirementsTXT) LookUp(path string) (buf []component.Component, err error) {
@@ -49,7 +51,7 @@ func (h *RequirementsTXT) LookUp(path string) (buf []component.Component, err er
 func (h *RequirementsTXT) SyncWithSource(c component.Component, ctx context.Context) component.Component {
 	switch v := c.(type) {
 	case *component.Module:
-		v = v.SyncWithPypi(ctx)
+		v = v.SyncWithPypi(ctx, h.HTTPClient)
 		v = v.SyncWithGitHub(ctx, h.GCli)
 		return v
 	default:

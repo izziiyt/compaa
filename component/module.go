@@ -3,6 +3,7 @@ package component
 import (
 	"context"
 	"fmt"
+	"net/http"
 	"strings"
 	"sync"
 	"time"
@@ -44,11 +45,11 @@ func (t *Module) StoreCache() {
 	moduleCache.Store(t.Name, t)
 }
 
-func (m *Module) SyncWithNPM(ctx context.Context) *Module {
+func (m *Module) SyncWithNPM(ctx context.Context, cli *http.Client) *Module {
 	if m.Err != nil {
 		return m
 	}
-	v, err := npm.FetchLatestVersion(ctx, m.Name)
+	v, err := npm.FetchLatestVersion(ctx, cli, m.Name)
 	if err != nil {
 		m.Err = err
 		return m
@@ -72,11 +73,11 @@ func (m *Module) SyncWithNPM(ctx context.Context) *Module {
 	return m
 }
 
-func (m *Module) SyncWithGopkg(ctx context.Context) *Module {
+func (m *Module) SyncWithGopkg(ctx context.Context, cli *http.Client) *Module {
 	if m.Err != nil {
 		return m
 	}
-	m.GHOrg, m.GHRepo, m.Err = gopkg.GetGitHub(ctx, m.Name)
+	m.GHOrg, m.GHRepo, m.Err = gopkg.GetGitHub(ctx, cli, m.Name)
 	return m
 }
 
@@ -106,11 +107,11 @@ func (t *Module) SyncWithGitHub(ctx context.Context, cli *github.Client) *Module
 	return t
 }
 
-func (t *Module) SyncWithPypi(ctx context.Context) *Module {
+func (t *Module) SyncWithPypi(ctx context.Context, cli *http.Client) *Module {
 	if t.Err != nil {
 		return t
 	}
-	r, err := pypi.GetPackage(ctx, t.Name)
+	r, err := pypi.GetPackage(ctx, cli, t.Name)
 	if err != nil {
 		t.Err = err
 		return t
@@ -121,11 +122,11 @@ func (t *Module) SyncWithPypi(ctx context.Context) *Module {
 	return t
 }
 
-func (t *Module) SyncWithRubyGem(ctx context.Context) *Module {
+func (t *Module) SyncWithRubyGem(ctx context.Context, cli *http.Client) *Module {
 	if t.Err != nil {
 		return t
 	}
-	r, err := rubygem.GetGem(ctx, t.Name)
+	r, err := rubygem.GetGem(ctx, cli, t.Name)
 	if err != nil {
 		t.Err = err
 		return t

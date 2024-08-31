@@ -17,8 +17,7 @@ type Response struct {
 	BugTrackerURI    string `json:"bug_tracker_uri"`
 }
 
-func GetGem(ctx context.Context, name string) (*Response, error) {
-	cli := http.DefaultClient
+func GetGem(ctx context.Context, cli *http.Client, name string) (*Response, error) {
 	url := fmt.Sprintf("%s/%s.json", baseURL, name)
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
