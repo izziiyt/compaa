@@ -149,12 +149,16 @@ func (c *CacheTransport) RoundTrip(req *http.Request) (*http.Response, error) {
 	}
 	resp.Body.Close()
 
-	entry := &CacheEntry{
-		ETag:         resp.Header.Get("ETag"),
-		LastModified: resp.Header.Get("Last-Modified"),
-		Body:         body,
+	etag := resp.Header.Get("ETag")
+	lm := resp.Header.Get("Last-Modified")
+	if etag != "" || lm != "" {
+		entry := &CacheEntry{
+			ETag:         etag,
+			LastModified: lm,
+			Body:         body,
+		}
+		c.Cache.Set(req.URL.String(), entry)
 	}
-	c.Cache.Set(req.URL.String(), entry)
 
 	resp.Body = io.NopCloser(bytes.NewReader(body))
 	return resp, nil
