@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"compress/gzip"
 	"encoding/gob"
 	"fmt"
 	"io"
@@ -29,10 +30,12 @@ func init() {
 }
 
 type CacheEntry struct {
-	ETag         string
-	LastModified string
-	Body         []byte
-	Expire       time.Time
+	ETag          string
+	LastModified  string
+	Body          []byte
+	Expire        time.Time
+	Compressed    bool
+	RedirectedURL string
 }
 
 type Cache struct {
@@ -62,6 +65,9 @@ func (c *Cache) Get(key string) (*CacheEntry, bool) {
 	entry, found := c.entries[key]
 	if !found {
 		return nil, false
+	}
+	if entry.RedirectedURL != "" {
+		return c.Get(entry.RedirectedURL)
 	}
 	return entry, true
 }
@@ -115,8 +121,10 @@ type CacheTransport struct {
 func NewCacheTransport() *CacheTransport {
 	cache := NewCache()
 	return &CacheTransport{
-		Transport: http.DefaultTransport,
-		Cache:     cache,
+		Transport: &http.Transport{
+			DisableCompression: true,
+		},
+		Cache: cache,
 	}
 }
 
@@ -124,12 +132,24 @@ func (c *CacheTransport) Close() {
 	c.Cache.Close()
 }
 
+func decompressedIOReader(b []byte) io.Reader {
+	r, err := gzip.NewReader(bytes.NewReader(b))
+	if err != nil {
+		panic(err)
+	}
+	return r
+}
+
 func (c *CacheTransport) RoundTrip(req *http.Request) (*http.Response, error) {
 	if entry, found := c.Cache.Get(req.URL.String()); found {
 		if entry.Expire.After(time.Now()) {
 			resp := &http.Response{
 				StatusCode: http.StatusOK,
-				Body:       io.NopCloser(bytes.NewReader(entry.Body)),
+			}
+			if entry.Compressed {
+				resp.Body = io.NopCloser(decompressedIOReader(entry.Body))
+			} else {
+				resp.Body = io.NopCloser(bytes.NewReader(entry.Body))
 			}
 			return resp, nil
 		}
@@ -141,6 +161,7 @@ func (c *CacheTransport) RoundTrip(req *http.Request) (*http.Response, error) {
 		}
 	}
 
+	req.Header.Set("Accept-Encoding", "gzip")
 	resp, err := c.Transport.RoundTrip(req)
 	if err != nil {
 		return nil, err
@@ -150,7 +171,13 @@ func (c *CacheTransport) RoundTrip(req *http.Request) (*http.Response, error) {
 	if resp.StatusCode == http.StatusNotModified {
 		entry, found := c.Cache.Get(req.URL.String())
 		if found {
-			resp.Body = io.NopCloser(bytes.NewReader(entry.Body))
+			if entry.Compressed {
+				resp.Body = io.NopCloser(decompressedIOReader(entry.Body))
+				resp.Header.Del("Content-Encoding")
+				resp.Header.Del("Content-Length")
+			} else {
+				resp.Body = io.NopCloser(bytes.NewReader(entry.Body))
+			}
 			age := extendAge(resp)
 			entry.Expire = time.Now().Add(time.Duration(age) * time.Second)
 			c.Cache.Set(req.URL.String(), entry)
@@ -164,20 +191,33 @@ func (c *CacheTransport) RoundTrip(req *http.Request) (*http.Response, error) {
 		return nil, err
 	}
 
+	gzipped := resp.Header.Get("Content-Encoding") == "gzip"
+
+	if gzipped {
+		resp.Body = io.NopCloser(decompressedIOReader(body))
+		resp.Header.Del("Content-Encoding")
+		resp.Header.Del("Content-Length")
+	} else {
+		resp.Body = io.NopCloser(bytes.NewReader(body))
+	}
+
 	etag := resp.Header.Get("ETag")
 	lm := resp.Header.Get("Last-Modified")
 	age := extendAge(resp)
-	if etag != "" || lm != "" || age > 0 {
-		entry := &CacheEntry{
-			ETag:         etag,
-			LastModified: lm,
-			Expire:       time.Now().Add(time.Duration(age) * time.Second),
-			Body:         body,
-		}
-		c.Cache.Set(req.URL.String(), entry)
+	entry := &CacheEntry{
+		ETag:         etag,
+		LastModified: lm,
+		Expire:       time.Now().Add(time.Duration(age) * time.Second),
+		Body:         body,
 	}
+	if gzipped {
+		entry.Compressed = true
+	}
+	if resp.StatusCode == http.StatusMovedPermanently {
+		entry.RedirectedURL = resp.Header.Get("Location")
+	}
+	c.Cache.Set(req.URL.String(), entry)
 
-	resp.Body = io.NopCloser(bytes.NewReader(body))
 	return resp, nil
 }
 
