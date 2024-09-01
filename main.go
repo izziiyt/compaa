@@ -5,7 +5,6 @@ import (
 	"flag"
 	"fmt"
 	"io/fs"
-	"net/http"
 	"os"
 	"path/filepath"
 	"strings"
@@ -39,7 +38,7 @@ func main() {
 	if *token == "" {
 		fmt.Println("WARN: recommended to use github token. see `compaa -h`")
 	}
-	transport := NewCacheTransport(http.DefaultTransport)
+	transport := NewCacheTransport()
 	defer transport.Close()
 	r := NewRouter(*token, transport)
 	err := filepath.WalkDir(path, func(path string, d fs.DirEntry, err error) error {

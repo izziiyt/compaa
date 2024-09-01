@@ -27,7 +27,6 @@ func FetchLatestVersion(ctx context.Context, cli *http.Client, lib string) (*Ver
 	if err != nil {
 		return nil, err
 	}
-	// cli := http.DefaultClient
 	res, err := cli.Do(req)
 	if err != nil {
 		return nil, err

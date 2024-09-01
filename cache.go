@@ -8,7 +8,10 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"strconv"
+	"strings"
 	"sync"
+	"time"
 )
 
 var cacheFile string
@@ -29,11 +32,12 @@ type CacheEntry struct {
 	ETag         string
 	LastModified string
 	Body         []byte
+	Expire       time.Time
 }
 
 type Cache struct {
 	entries map[string]*CacheEntry
-	mu      sync.Mutex
+	mu      sync.RWMutex
 }
 
 func NewCache() *Cache {
@@ -53,8 +57,8 @@ func (c *Cache) Close() {
 }
 
 func (c *Cache) Get(key string) (*CacheEntry, bool) {
-	c.mu.Lock()
-	defer c.mu.Unlock()
+	c.mu.RLock()
+	defer c.mu.RUnlock()
 	entry, found := c.entries[key]
 	if !found {
 		return nil, false
@@ -108,10 +112,10 @@ type CacheTransport struct {
 	Cache     *Cache
 }
 
-func NewCacheTransport(transport http.RoundTripper) *CacheTransport {
+func NewCacheTransport() *CacheTransport {
 	cache := NewCache()
 	return &CacheTransport{
-		Transport: transport,
+		Transport: http.DefaultTransport,
 		Cache:     cache,
 	}
 }
@@ -122,6 +126,13 @@ func (c *CacheTransport) Close() {
 
 func (c *CacheTransport) RoundTrip(req *http.Request) (*http.Response, error) {
 	if entry, found := c.Cache.Get(req.URL.String()); found {
+		if entry.Expire.After(time.Now()) {
+			resp := &http.Response{
+				StatusCode: http.StatusOK,
+				Body:       io.NopCloser(bytes.NewReader(entry.Body)),
+			}
+			return resp, nil
+		}
 		if entry.ETag != "" {
 			req.Header.Set("If-None-Match", entry.ETag)
 		}
@@ -134,10 +145,15 @@ func (c *CacheTransport) RoundTrip(req *http.Request) (*http.Response, error) {
 	if err != nil {
 		return nil, err
 	}
+	defer resp.Body.Close()
 
 	if resp.StatusCode == http.StatusNotModified {
-		if entry, found := c.Cache.Get(req.URL.String()); found {
+		entry, found := c.Cache.Get(req.URL.String())
+		if found {
 			resp.Body = io.NopCloser(bytes.NewReader(entry.Body))
+			age := extendAge(resp)
+			entry.Expire = time.Now().Add(time.Duration(age) * time.Second)
+			c.Cache.Set(req.URL.String(), entry)
 			resp.StatusCode = http.StatusOK
 			return resp, nil
 		}
@@ -147,14 +163,15 @@ func (c *CacheTransport) RoundTrip(req *http.Request) (*http.Response, error) {
 	if err != nil {
 		return nil, err
 	}
-	resp.Body.Close()
 
 	etag := resp.Header.Get("ETag")
 	lm := resp.Header.Get("Last-Modified")
-	if etag != "" || lm != "" {
+	age := extendAge(resp)
+	if etag != "" || lm != "" || age > 0 {
 		entry := &CacheEntry{
 			ETag:         etag,
 			LastModified: lm,
+			Expire:       time.Now().Add(time.Duration(age) * time.Second),
 			Body:         body,
 		}
 		c.Cache.Set(req.URL.String(), entry)
@@ -162,4 +179,30 @@ func (c *CacheTransport) RoundTrip(req *http.Request) (*http.Response, error) {
 
 	resp.Body = io.NopCloser(bytes.NewReader(body))
 	return resp, nil
+}
+
+func getMaxAge(cacheControl string) int {
+	directives := strings.Split(cacheControl, ",")
+	for _, directive := range directives {
+		directive = strings.TrimSpace(directive)
+		if strings.HasPrefix(directive, "max-age=") {
+			ageStr := strings.TrimPrefix(directive, "max-age=")
+			age, err := strconv.Atoi(ageStr)
+			if err != nil {
+				return 0
+			}
+			return age
+		}
+	}
+	return 0
+}
+
+func extendAge(resp *http.Response) int {
+	age, err := strconv.Atoi(resp.Header.Get("Age"))
+	if err != nil {
+		age = 0
+	}
+	maxage := getMaxAge(resp.Header.Get("Cache-Control"))
+	diff := max(maxage-age, 0)
+	return diff
 }
