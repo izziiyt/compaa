@@ -21,6 +21,19 @@ var (
 func main() {
 	flag.Parse()
 	args := flag.Args()
+
+	transport := NewCacheTransport()
+	defer transport.Close()
+
+	if len(args) > 0 && args[0] == "flush" {
+		if err := transport.Cache.Clear(); err != nil {
+			fmt.Fprintln(os.Stderr, "Failed to clear cache:", err)
+			os.Exit(1)
+		}
+		fmt.Println("Cache cleared successfully.")
+		return
+	}
+
 	path := "."
 	if len(args) > 0 {
 		path = args[0]
@@ -38,7 +51,7 @@ func main() {
 	if *token == "" {
 		fmt.Println("WARN: recommended to use github token. see `compaa -h`")
 	}
-	transport := NewCacheTransport()
+	transport = NewCacheTransport()
 	defer transport.Close()
 	r := NewRouter(*token, transport)
 	err := filepath.WalkDir(path, func(path string, d fs.DirEntry, err error) error {
