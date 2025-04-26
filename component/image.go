@@ -104,6 +104,7 @@ type Logger interface {
 	Error(format string, a ...interface{})
 	Warn(format string, a ...interface{})
 	Info(format string, a ...interface{})
+	Debug(format string, a ...interface{})
 }
 
 type DefaultLogger struct{}
@@ -120,20 +121,27 @@ func (l *DefaultLogger) Info(format string, a ...interface{}) {
 	color.Green(format, a...)
 }
 
+func (l *DefaultLogger) Debug(format string, a ...interface{}) {
+	color.White(format, a...)
+}
+
 func (c *Image) Logging(wc *WarnCondition, logger Logger) {
 	if logger == nil {
 		logger = &DefaultLogger{}
 	}
 
 	if c.Err != nil {
-		logger.Error("├ ERROR: %v %v\n", c.RawString, c.Err)
+		if strings.Contains(c.Err.Error(), "unsupported registry") {
+			logger.Debug("├ INFO: %v %v\n", c.RawString, c.Err)
+		} else {
+			logger.Error("├ ERROR: %v %v\n", c.RawString, c.Err)
+		}
 		return
 	}
 	if c.LastUpdate.AddDate(0, 0, wc.RecentDays).Before(time.Now()) {
 		logger.Warn("├ WARN: %v last update isn't recent (%v)\n", c.RawString, c.LastUpdate.Format("2006-01-02"))
 		return
 	}
-	// logger.Info("├ INFO: pass %v (%v)\n", c.RawString, c.LastUpdate)
 }
 
 func (c *Image) LoadCache() bool {

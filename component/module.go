@@ -155,7 +155,11 @@ func (t *Module) Logging(wc *WarnCondition, logger Logger) {
 	}
 
 	if t.Err != nil {
-		logger.Error("├ ERROR: %v %v\n", t.Name, t.Err)
+		if strings.Contains(t.Err.Error(), "unsupported registry") {
+			logger.Debug("├ INFO: %v %v\n", t.Name, t.Err)
+		} else {
+			logger.Error("├ ERROR: %v %v\n", t.Name, t.Err)
+		}
 		return
 	}
 	if wc.IfArchived && t.Archived {

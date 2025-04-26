@@ -122,6 +122,17 @@ func (c *Cache) LoadFromFile(filePath string) error {
 	return decoder.Decode(&c.entries)
 }
 
+func (c *Cache) Clear() error {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	c.entries = make(map[string]*CacheEntry) // Clear in-memory cache
+	err := os.Remove(cacheFile)              // Remove the cache file
+	if err != nil && !os.IsNotExist(err) {
+		return fmt.Errorf("failed to remove cache file: %w", err)
+	}
+	return nil
+}
+
 type CacheTransport struct {
 	Transport http.RoundTripper
 	Cache     *Cache

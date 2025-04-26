@@ -43,7 +43,7 @@ func GetRepoFromCustomDomain(ctx context.Context, cli *http.Client, name string)
 		org = tokens[3]
 		repo = tokens[4]
 	} else {
-		err = fmt.Errorf("unsupported regisitry %v", repoUrl)
+		err = fmt.Errorf("unsupported registry %v", repoUrl)
 	}
 	return
 }
