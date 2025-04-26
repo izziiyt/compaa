@@ -1,7 +1,7 @@
 package component
 
 type Component interface {
-	Logging(wc *WarnCondition)
+	Logging(wc *WarnCondition, logger Logger)
 	LoadCache() bool
 	StoreCache()
 }

@@ -8,7 +8,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/fatih/color"
 	"github.com/google/go-github/v60/github"
 	"github.com/izziiyt/compaa/sdk/gopkg"
 	"github.com/izziiyt/compaa/sdk/npm"
@@ -150,18 +149,22 @@ func (t *Module) SyncWithRubyGem(ctx context.Context, cli *http.Client) *Module 
 	return t
 }
 
-func (t *Module) Logging(wc *WarnCondition) {
+func (t *Module) Logging(wc *WarnCondition, logger Logger) {
+	if logger == nil {
+		logger = &DefaultLogger{}
+	}
+
 	if t.Err != nil {
-		color.Red("├ ERROR: %v %v\n", t.Name, t.Err)
+		logger.Error("├ ERROR: %v %v\n", t.Name, t.Err)
 		return
 	}
 	if wc.IfArchived && t.Archived {
-		color.Yellow("├ WARN: %v is archived\n", t.Name)
+		logger.Warn("├ WARN: %v is archived\n", t.Name)
 		return
 	}
 	if t.LastPush.AddDate(0, 0, wc.RecentDays).Before(time.Now()) {
-		color.Yellow("├ WARN: %v last push isn't recent (%v)\n", t.Name, t.LastPush)
+		logger.Warn("├ WARN: %v last push isn't recent (%v)\n", t.Name, t.LastPush)
 		return
 	}
-	// color.Green("├ INFO: pass %v last push is recent (%v)\n", t.Name, t.LastPush)
+	// logger.Info("├ INFO: pass %v last push is recent (%v)\n", t.Name, t.LastPush)
 }

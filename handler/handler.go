@@ -24,9 +24,10 @@ func Handle(h Handler, ctx context.Context, path string, wc *component.WarnCondi
 
 	wg := &sync.WaitGroup{}
 	done := make(chan struct{}, 10)
+	logger := &component.DefaultLogger{} // Create a DefaultLogger instance
 	for _, c := range cs {
 		if ok := c.LoadCache(); ok {
-			c.Logging(wc)
+			c.Logging(wc, logger) // Pass the logger
 			continue
 		}
 		wg.Add(1)
@@ -34,7 +35,7 @@ func Handle(h Handler, ctx context.Context, path string, wc *component.WarnCondi
 			done <- struct{}{}
 			c = h.SyncWithSource(c, ctx)
 			c.StoreCache()
-			c.Logging(wc)
+			c.Logging(wc, logger) // Pass the logger
 			<-done
 			wg.Done()
 		}(ctx, c)

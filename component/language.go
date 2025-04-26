@@ -7,7 +7,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/fatih/color"
 	"github.com/izziiyt/compaa/sdk/eol"
 )
 
@@ -35,20 +34,24 @@ func (t *Language) SyncWithEndOfLife(ctx context.Context, cli *http.Client) *Lan
 	return t
 }
 
-func (t *Language) Logging(wc *WarnCondition) {
+func (t *Language) Logging(wc *WarnCondition, logger Logger) {
+	if logger == nil {
+		logger = &DefaultLogger{}
+	}
+
 	if t.Err != nil {
-		color.Red("├ ERROR: %v %v\n", t.Name, t.Err)
+		logger.Error("├ ERROR: %v %v\n", t.Name, t.Err)
 		return
 	}
 	if wc.IfArchived && t.EOL {
-		color.Yellow("├ WARN: %v%v is EOL\n", t.Name, t.Version)
+		logger.Warn("├ WARN: %v%v is EOL\n", t.Name, t.Version)
 		return
 	}
 	if !t.EOLDate.IsZero() && time.Now().AddDate(0, 0, wc.RecentDays).After(t.EOLDate) {
-		color.Yellow("├ WARN: %v%v EOL is recent\n", t.Name, t.Version)
+		logger.Warn("├ WARN: %v%v EOL is recent\n", t.Name, t.Version)
 		return
 	}
-	// color.Green("├ INFO: pass %v%v\n", t.Name, t.Version)
+	// logger.Info("├ INFO: pass %v%v\n", t.Name, t.Version)
 }
 
 func (t *Language) LoadCache() bool {
