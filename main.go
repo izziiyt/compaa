@@ -14,7 +14,7 @@ import (
 )
 
 var (
-	rd    = flag.Int("d", 360, "recent days. used to determine log level")
+	rd    = flag.Int("d", 730, "recent days. used to determine log level")
 	token = flag.String("t", "", "github token. recommended to set for sufficient github api rate limit, or set GITHUB_TOKEN env var")
 )
 

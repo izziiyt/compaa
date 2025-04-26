@@ -163,8 +163,7 @@ func (t *Module) Logging(wc *WarnCondition, logger Logger) {
 		return
 	}
 	if t.LastPush.AddDate(0, 0, wc.RecentDays).Before(time.Now()) {
-		logger.Warn("├ WARN: %v last push isn't recent (%v)\n", t.Name, t.LastPush)
+		logger.Warn("├ WARN: %v last push isn't recent (%v)\n", t.Name, t.LastPush.Format("2006-01-02"))
 		return
 	}
-	// logger.Info("├ INFO: pass %v last push is recent (%v)\n", t.Name, t.LastPush)
 }

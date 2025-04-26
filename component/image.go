@@ -130,7 +130,7 @@ func (c *Image) Logging(wc *WarnCondition, logger Logger) {
 		return
 	}
 	if c.LastUpdate.AddDate(0, 0, wc.RecentDays).Before(time.Now()) {
-		logger.Warn("├ WARN: %v last update isn't recent (%v)\n", c.RawString, c.LastUpdate)
+		logger.Warn("├ WARN: %v last update isn't recent (%v)\n", c.RawString, c.LastUpdate.Format("2006-01-02"))
 		return
 	}
 	// logger.Info("├ INFO: pass %v (%v)\n", c.RawString, c.LastUpdate)

@@ -13,11 +13,16 @@ import (
 var languageCache = sync.Map{}
 
 type Language struct {
-	Name    string
-	Version string
-	EOL     bool
-	EOLDate time.Time
-	Err     error
+	Name               string
+	Version            string
+	EOL                bool
+	EOLDate            time.Time
+	LatestPatchVersion string
+	Err                error
+}
+
+func (t *Language) IsLatestPatch() bool {
+	return t.Version == t.LatestPatchVersion
 }
 
 func (t *Language) SyncWithEndOfLife(ctx context.Context, cli *http.Client) *Language {
@@ -30,6 +35,7 @@ func (t *Language) SyncWithEndOfLife(ctx context.Context, cli *http.Client) *Lan
 
 	t.EOL = cd.EOL
 	t.EOLDate = cd.EOLDate
+	t.LatestPatchVersion = cd.Latest
 
 	return t
 }
@@ -43,15 +49,20 @@ func (t *Language) Logging(wc *WarnCondition, logger Logger) {
 		logger.Error("├ ERROR: %v %v\n", t.Name, t.Err)
 		return
 	}
+
+	if !t.IsLatestPatch() {
+		logger.Warn("├ WARN: %v@%v is not latest patch (%v)\n", t.Name, t.Version, t.LatestPatchVersion)
+	}
+
 	if wc.IfArchived && t.EOL {
 		logger.Warn("├ WARN: %v%v is EOL\n", t.Name, t.Version)
 		return
 	}
+
 	if !t.EOLDate.IsZero() && time.Now().AddDate(0, 0, wc.RecentDays).After(t.EOLDate) {
-		logger.Warn("├ WARN: %v%v EOL is recent\n", t.Name, t.Version)
+		logger.Warn("├ WARN: %v@%v EOL is recent (%v)\n", t.Name, t.Version, t.EOLDate.Format("2006-01-02"))
 		return
 	}
-	// logger.Info("├ INFO: pass %v%v\n", t.Name, t.Version)
 }
 
 func (t *Language) LoadCache() bool {
