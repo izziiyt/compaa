@@ -12,12 +12,12 @@ It aims supporting your secure software component maintainance.
 
 go
 ```bash
-go install github.com/izziiyt/compaa
+go install github.com/izziiyt/compaa@latest
 ```
 
 mise
 ```bash
-mise use --global go:github.com/izziiyt/compaa
+mise use --global go:github.com/izziiyt/compaa@latest
 ```
 
 # Example
@@ -29,12 +29,12 @@ GITHUB_TOKEN=${YOUR_GITHUB_TOKEN} compaa ./target/path
 ./path/example0/Dockerfile
 ./path/example1/subpath/package.json
 ./path/example2/Dockerfile
-├ WARN: docker.io/library/alpine:3.13 last update isnt recent (2022-11-10 20:55:35.397295 +0000 UTC)
+├ WARN: docker.io/library/alpine:3.13 last update is'nt recent (2022-11-10)
 ./path/example2/subpath/Dockerfile
 ./path/example3/go.mod
 ├ WARN: go1.18 is EOL
 ├ WARN: github.com/pkg/errors is archived
-├ WARN: github.com/jinzhu/gorm last push isnt recent (2023-09-11 08:16:54 +0000 UTC)
+├ WARN: github.com/jinzhu/gorm last push is'nt recent (2023-09-11)
 ```
 
 # Supported File Format
