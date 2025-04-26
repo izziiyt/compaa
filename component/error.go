@@ -10,7 +10,6 @@ import (
 
 var (
 	ErrorCache = make(map[string]*CustomErrorImpl)
-	errLock    sync.Mutex
 	errKey     = "recent_errors" // Define errKey
 )
 
