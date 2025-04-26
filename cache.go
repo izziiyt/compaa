@@ -9,20 +9,29 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"runtime/debug"
 	"strconv"
 	"strings"
 	"sync"
 	"time"
 )
 
-var cacheFile string
+var (
+	cacheFile string
+	Version   string = "dev" // Default version for development
+)
 
 func init() {
+	// if version changes, the cache path also changes for unexpected bug
+	if buildInfo, ok := debug.ReadBuildInfo(); ok {
+		Version = buildInfo.Main.Version
+	}
+
 	home, err := os.UserHomeDir()
 	if err != nil {
 		return
 	}
-	cacheDir := filepath.Join(home, ".local", "share", "compaa")
+	cacheDir := filepath.Join(home, ".local", "share", "compaa", Version)
 	cacheFile = filepath.Join(cacheDir, ".cache")
 	if err := os.MkdirAll(cacheDir, 0755); err != nil {
 		fmt.Println("Warn: fails creating cache directory:", err)
